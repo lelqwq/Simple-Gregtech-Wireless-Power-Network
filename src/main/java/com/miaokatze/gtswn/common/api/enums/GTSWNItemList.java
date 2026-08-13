@@ -18,18 +18,6 @@ import gregtech.api.util.GTLog;
  */
 public enum GTSWNItemList implements IItemContainer {
 
-    // 测试机器：EV, IV, LuV 等级
-    Test_Machine_EV,
-    Test_Machine_IV,
-    Test_Machine_LuV,
-
-    // 测试用多方块机器 (HV)
-    Test_Multiblock_HV,
-
-    // 测试物品
-    TestCoin,
-    // 电子测试硬币 (现在由 GTSWNMetaItem01 管理)
-    TestCoinE,
     // 便携式无线网络监测终端
     Portable_Wireless_Network_Monitor,
     // 无线能量监视器
@@ -39,7 +27,9 @@ public enum GTSWNItemList implements IItemContainer {
     // 无线能量覆盖板（输入）
     GTswn_Cover_Energy_Wireless,
     // 无线动力覆盖板（输出）
-    GTswn_Cover_Dynamo_Wireless;
+    GTswn_Cover_Dynamo_Wireless,
+    // 测试硬币（测试环境道具：右键 +100万 EU，Shift+右键 -100万 EU）
+    TestCoin;
 
     // 存储对应的物品堆栈实例
     private ItemStack mStack;

@@ -15,8 +15,8 @@ public class Config {
     // 此配置仅用于在基准值基础上进行微调。
     public static int metaIdOffset = 0;
 
-    // 无线网络监测开关，默认开启
-    public static boolean wirelessNetworkMonitor = true;
+    // 说明：无线网络监测开关（wirelessNetworkMonitor）已在阶段 C 移除——聊天监测事件处理器已删除，
+    // 电网监测由便携终端 HUD 与无线能量监视器机器承担。
 
     // 下行损耗系数 / Downlink loss ratio
     // 能源覆盖板从无线网络取电时，机器收到的 EU 不变，电网按 (1 + 此值) 倍率扣除。
@@ -66,12 +66,6 @@ public class Config {
             -5000,
             5000,
             "应用于 MTE ID 基准值的偏移量 (用于预留 ID 区间)");
-
-        wirelessNetworkMonitor = configuration.getBoolean(
-            "wirelessNetworkMonitor",
-            Configuration.CATEGORY_GENERAL,
-            wirelessNetworkMonitor,
-            "是否开启无线网络监测，开启后会在聊天窗口输出电网能量变化 (默认 true)");
 
         // 下行损耗系数 / Downlink loss ratio
         downlinkLossEU = configuration.getFloat(
