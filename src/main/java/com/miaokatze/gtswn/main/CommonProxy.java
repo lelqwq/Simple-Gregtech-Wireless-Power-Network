@@ -10,6 +10,7 @@ import com.miaokatze.gtswn.common.covers.GTswn_Cover_EnergyWireless;
 import com.miaokatze.gtswn.config.Config;
 import com.miaokatze.gtswn.loader.ItemLoader;
 import com.miaokatze.gtswn.loader.MachineLoader;
+import com.miaokatze.gtswn.network.GTSWNPacketHandler;
 import com.miaokatze.gtswn.recipe.CraftingRecipes;
 import com.miaokatze.gtswn.recipe.TestMachineRecipes;
 import com.miaokatze.gtswn.register.CreativeTabManager;
@@ -80,6 +81,10 @@ public class CommonProxy {
         } catch (Throwable t) {
             GTSimpleWirelessNetwork.LOG.error("无法将注册任务添加到 GregTech 队列", t);
         }
+
+        // 注册网络包通道（修复 SMP 下便携监测终端 HUD 恒显 0 EU 的问题）
+        GTSimpleWirelessNetwork.LOG.info("注册网络包通道...");
+        GTSWNPacketHandler.register();
     }
 
     /**
@@ -148,4 +153,19 @@ public class CommonProxy {
      * 如果之前注册失败，可以在此处进行最后的补救尝试。
      */
     public void loadComplete(cpw.mods.fml.common.event.FMLLoadCompleteEvent event) {}
+
+    /**
+     * 处理服务端→客户端 EU 响应包（客户端专用逻辑）。
+     * <p>
+     * 服务端空实现：此包只发往客户端，服务端收到也不会调用本方法。
+     * 客户端逻辑由 {@link ClientProxy#handleResponseEU} 重写。
+     * <p>
+     * 设计（沿用上游 v1.5.14 hotfix）：不在包 Handler 方法体中直接引用客户端类，
+     * 统一通过 @SidedProxy 委托，避免现代 JVM 下类加载触发 SideTransformer 剥离而崩服。
+     *
+     * @param euStr 服务端传来的 EU 字符串
+     */
+    public void handleResponseEU(String euStr) {
+        // 服务端空实现：此包只发往客户端
+    }
 }

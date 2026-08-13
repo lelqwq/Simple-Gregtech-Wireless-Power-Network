@@ -16,9 +16,10 @@ import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import org.lwjgl.opengl.GL11;
 
 import com.miaokatze.gtswn.common.items.PortableWirelessNetworkMonitor;
+import com.miaokatze.gtswn.network.GTSWNPacketHandler;
+import com.miaokatze.gtswn.network.PacketRequestWirelessEU;
 
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
-import gregtech.common.misc.WirelessNetworkManager;
 
 /**
  * 便携式无线网络监测终端 HUD 渲染器
@@ -37,6 +38,9 @@ public class WirelessMonitorHUD extends Gui {
     /** 缓存的拥有者 UUID（用于 HUD 显示） */
     private static String cachedOwnerUUID = null;
 
+    /** 服务端回包同步的电网能量字符串（receiveSyncedEU 写入，渲染只读） */
+    private static String syncedEuStr = null;
+
     /** 历史测量记录列表（只记录发生变化的点） */
     private static List<Measurement> measurementHistory = new ArrayList<>();
 
@@ -52,8 +56,8 @@ public class WirelessMonitorHUD extends Gui {
     /** 最大无变化检测次数（超过此值显示“暂无变化”） */
     private static final int MAX_UNCHANGED_COUNT = 60;
 
-    /** HUD 更新间隔（ticks），每 200 ticks（10 秒）更新一次 */
-    private static final int UPDATE_INTERVAL = 200;
+    /** HUD 更新间隔（ticks），每 100 ticks（5 秒）向服务端请求并更新一次 */
+    private static final int UPDATE_INTERVAL = 100;
 
     /** 背包遍历间隔（ticks），每 20 ticks（1 秒）检查一次 */
     private static final int INVENTORY_CHECK_INTERVAL = 20;
@@ -113,6 +117,7 @@ public class WirelessMonitorHUD extends Gui {
      */
     private static void clearCache() {
         cachedOwnerUUID = null;
+        syncedEuStr = null;
         cachedEUText = "§b" + StatCollector.translateToLocal("gtswn.hud.wireless.network")
             + ": §f0 §b"
             + StatCollector.translateToLocal("gtswn.hud.eu.unit");
@@ -336,8 +341,11 @@ public class WirelessMonitorHUD extends Gui {
      * 更新 HUD 缓存数据
      */
     private void updateCache(long currentTick, UUID uuid) {
-        // 调用 GT5U 的 WirelessNetworkManager 获取无线电网能量
-        BigInteger wirelessEU = WirelessNetworkManager.getUserEU(uuid);
+        // 向服务端请求无线电网能量（SMP 下 GlobalEnergy 数据只存在于服务端，客户端直接查询恒得 0）
+        GTSWNPacketHandler.NETWORK.sendToServer(new PacketRequestWirelessEU(uuid.toString()));
+
+        // 渲染使用服务端回包的缓存值（receiveSyncedEU 写入）；未收到首包前为 0 占位
+        BigInteger wirelessEU = parseSyncedEU();
 
         // 根据显示模式格式化能量值
         String euFormatted;
@@ -360,6 +368,29 @@ public class WirelessMonitorHUD extends Gui {
         cachedEUTText = calculateEUT(currentTick);
 
         lastUpdateTick = currentTick;
+    }
+
+    /**
+     * 接收服务端 EU 响应包（由 ClientProxy.handleResponseEU 调度到客户端主线程调用）。
+     *
+     * @param euStr 服务端传来的 EU 字符串（BigInteger.toString）
+     */
+    public static void receiveSyncedEU(String euStr) {
+        syncedEuStr = euStr;
+    }
+
+    /**
+     * 解析服务端回包的 EU 字符串为 BigInteger（未收到首包或格式异常时返回 0 占位）。
+     */
+    private static BigInteger parseSyncedEU() {
+        if (syncedEuStr == null || syncedEuStr.isEmpty()) {
+            return BigInteger.ZERO;
+        }
+        try {
+            return new BigInteger(syncedEuStr);
+        } catch (NumberFormatException e) {
+            return BigInteger.ZERO;
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.miaokatze.gtswn.main;
 
+import net.minecraft.client.Minecraft;
 import net.minecraftforge.common.MinecraftForge;
 
 import com.miaokatze.gtswn.common.hud.WirelessMonitorHUD;
@@ -26,6 +27,21 @@ public class ClientProxy extends CommonProxy {
         // 注意：RenderGameOverlayEvent 是 Forge 事件，必须注册到 MinecraftForge.EVENT_BUS
         GTSimpleWirelessNetwork.LOG.info("[2/2] 注册客户端 HUD 渲染器...");
         MinecraftForge.EVENT_BUS.register(new WirelessMonitorHUD());
+    }
+
+    /**
+     * 处理服务端→客户端 EU 响应包（客户端逻辑）。
+     * <p>
+     * 包 Handler 运行在 Netty 网络线程，而 HUD 缓存在客户端主线程渲染读取，
+     * 故用 {@link Minecraft#func_152344_a(Runnable)} 把写操作调度到主线程，避免并发读到半更新状态。
+     *
+     * @param euStr 服务端传来的 EU 字符串
+     */
+    @Override
+    public void handleResponseEU(String euStr) {
+        // 1.7.10 API：func_152344_a 等价于 1.8+ 的 addScheduledTask，调度到客户端主线程
+        Minecraft.getMinecraft()
+            .func_152344_a(() -> WirelessMonitorHUD.receiveSyncedEU(euStr));
     }
 
 }
