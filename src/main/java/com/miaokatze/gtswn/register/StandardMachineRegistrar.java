@@ -9,9 +9,7 @@ import com.miaokatze.gtswn.common.machine.MTEWirelessEnergyMonitor;
 
 /**
  * 标准机器注册器
- * 继承自 MachineRegistrar，负责具体定义并注册模组内的单方块机器。
- * <p>
- * 阶段 C：测试机器（EV/IV/LuV 测试发电机）已随清理移除，不再注册。
+ * 继承自 MachineRegistrar，负责具体定义并注册模组内的标准单方块机器。
  */
 public class StandardMachineRegistrar extends MachineRegistrar {
 

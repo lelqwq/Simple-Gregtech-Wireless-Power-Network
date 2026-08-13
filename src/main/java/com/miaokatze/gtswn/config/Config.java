@@ -1,25 +1,49 @@
 package com.miaokatze.gtswn.config;
 
 import java.io.File;
+import java.util.Arrays;
 
 import net.minecraftforge.common.config.Configuration;
 
 /**
  * 模组配置管理类
- * 负责读取和保存模组的配置文件 (config/gtswn.cfg)
+ * <p>
+ * 负责读取和保存模组的配置文件。配置统一放在 {@code config/gtswn/} 目录下：
+ * <ul>
+ * <li>{@code gtswn.cfg}：仅含 MTE ID 偏移等基础配置</li>
+ * <li>{@code gtswn_network.cfg}：无线网络上下行损耗系数 + HUD 显示参数</li>
+ * </ul>
+ * <p>
+ * gtswn_network.cfg 结构：
+ * 
+ * <pre>
+ * general {
+ *     DownlinkLossEU / UplinkLossEU   // 上下行损耗
+ * }
+ * hud {
+ *     HudXOffset / HudYOffset / HudScale  // HUD 偏移与缩放
+ * }
+ * </pre>
  */
 public class Config {
+
+    /** gtswn_network.cfg 中 HUD 参数的独立类目名（与 general 平级） */
+    private static final String CATEGORY_HUD = "hud";
+
+    /** AE2 网络监视配置类目名 */
+    private static final String CATEGORY_AE2 = "ae2";
+
+    /** 网络信息屏历史数据保留配置类目名（v1.5.15 新增） */
+    private static final String CATEGORY_NETWORK_INFO = "network_info";
 
     // GregTech 元机器实体 (MTE) ID 分配的偏移量。
     // 注意：基准值 (BASE) 已在 MetaTileEntityID.java 中硬编码为 14600，以便按类型分段管理 ID。
     // 此配置仅用于在基准值基础上进行微调。
     public static int metaIdOffset = 0;
 
-    // 说明：无线网络监测开关（wirelessNetworkMonitor）已在阶段 C 移除——聊天监测事件处理器已删除，
-    // 电网监测由便携终端 HUD 与无线能量监视器机器承担。
-
     // 下行损耗系数 / Downlink loss ratio
     // 能源覆盖板从无线网络取电时，机器收到的 EU 不变，电网按 (1 + 此值) 倍率扣除。
+    // When energy cover draws EU from wireless network, machine receives full amount;
     // network deducts (1 + this value) × EU.
     // 默认 0.15 = 电网扣 1.15 倍 / Default 0.15 = network deducts 1.15×
     public static float downlinkLossEU = 0.15f;
@@ -32,9 +56,6 @@ public class Config {
     // Default 0.0 = no loss; 1.0 = network receives nothing (cannot upload any EU)
     public static float uplinkLossEU = 0.0f;
 
-    // HUD 配置分类 / HUD config category
-    private static final String CATEGORY_HUD = "hud";
-
     // HUD 水平偏移 / HUD horizontal offset
     // 正值 = HUD 向右移动，负值 = HUD 向左移动 / positive = shift right, negative = shift left
     // 默认 0 = 无偏移 / Default 0 = no offset
@@ -42,19 +63,71 @@ public class Config {
 
     // HUD 垂直偏移 / HUD vertical offset
     // 正值 = HUD 向上移动，负值 = HUD 向下移动 / positive = shift up, negative = shift down
+    // 注意：屏幕坐标系 Y 向下为正，此处正值语义为"上移"，与屏幕坐标相反，
+    // 渲染时将通过减去该值反转坐标（hudY = baseY - hudYOffset）。
+    // Note: screen Y axis points downward; positive here means "up" (opposite to screen coords),
+    // renderer inverts it by subtraction (hudY = baseY - hudYOffset).
     // 默认 0 = 无偏移 / Default 0 = no offset
     public static int hudYOffset = 0;
 
     // HUD 缩放比例 / HUD scale ratio
     // 1.0 = 默认大小，>1.0 放大，<1.0 缩小 / 1.0 = default size, >1.0 enlarge, <1.0 shrink
-    // 默认 1.0 / Default 1.0
+    // 渲染时以 HUD 基准点为缩放原点，避免缩放后位置漂移。
+    // Renderer uses HUD base point as scale origin to prevent position drift.
+    // 默认 1.0 = 默认大小 / Default 1.0 = default size
     public static float hudScale = 1.0f;
 
+    // AE2 监控采样间隔（tick）/ AE2 monitor sample interval (ticks)
+    // 数值越小采样越频繁，但会增加服务器负担 / Smaller value = more frequent sampling, higher server load
+    // 默认 100 ticks = 5 秒 / Default 100 ticks = 5 seconds
+    public static int aeSampleInterval = 100;
+
+    // AE2 实时监控最大监视项数 / AE2 real-time monitor max items
+    // 限制单个信息屏可同时监视的物品与流体总数 / Limits total items + fluids per panel
+    // 默认 64 / Default 64
+    public static int aeMaxMonitoredItems = 64;
+
+    // AE2 走势图最大采样点数 / AE2 chart max sample points
+    // 决定 5 分钟窗口保留多少个点（受内部 FIFO 容量 61 限制） / Determines how many points the 5-min window keeps (capped by FIFO capacity
+    // 61)
+    // 默认 61 / Default 61
+    public static int aeMaxSamplePoints = 61;
+
+    // 是否启用 AE2 走势图 / Enable AE2 chart
+    // 关闭后不再采集 AE 监控数据 / Disables AE monitoring data sampling when false
+    // 默认 true / Default true
+    public static boolean aeChartEnabled = true;
+
+    // ME 网络量子节点闲置功耗（AE/t）/ ME Network Quantum Node idle power usage (AE/t)（v1.6.1 问题 7）
+    // 每个已桥接的量子节点都会给锚点所属 ME 网络增加此功耗
+    // 默认 10 / Default 10；v1.6.0 硬编码为 16 / Hardcoded to 16 in v1.6.0
+    public static double quantumNodeIdlePowerUsage = 10.0D;
+
+    // 性能审计开关 / Performance audit switch (v1.6.19 新增)
+    // 默认 false：完全静默；开启后按 performanceAuditIntervalMinutes（默认 10 分钟）向日志输出 TPS/本mod每tick耗时/交互计数报告
+    // Default false: fully silent; when enabled, reports TPS/mod mspt/interaction counts per
+    // performanceAuditIntervalMinutes (default 10 minutes)
+    // 需重启生效 / Requires restart
+    public static boolean performanceAuditEnabled = false;
+
+    // 性能审计报告周期（分钟）/ Performance audit report interval in minutes (v1.6.20 新增)
+    // 默认 10 分钟，范围 1~60，需重启生效 / Default 10 minutes, range 1-60, requires restart
+    public static int performanceAuditIntervalMinutes = 10;
+
+    // 网络信息屏历史数据保留天数 / Network info panel history retention days (v1.5.15 新增)
+    // 超过此天数未采样的玩家数据集将在服务器启动时被清理，释放内存。
+    // 0 = 永不清理（不推荐，长期运行会内存泄漏）。
+    // Network info panel history retention days. Datasets not sampled within this many days
+    // will be cleaned up at server startup to release memory. 0 = never clean (not recommended).
+    // 默认 7 天 / Default 7 days
+    public static int keepHistoryDays = 7;
+
     /**
-     * 同步配置文件
-     * 从磁盘读取配置并更新静态变量，如果配置有变动则自动保存
-     * 
-     * @param configFile 配置文件对象
+     * 同步主配置文件 (gtswn.cfg)
+     * <p>
+     * 仅处理 MTE ID 偏移等基础配置项。从磁盘读取配置并更新静态变量，如果配置有变动则自动保存。
+     *
+     * @param configFile 配置文件对象 (config/gtswn/gtswn.cfg)
      */
     public static void synchronizeConfiguration(File configFile) {
         Configuration configuration = new Configuration(configFile);
@@ -67,7 +140,43 @@ public class Config {
             5000,
             "应用于 MTE ID 基准值的偏移量 (用于预留 ID 区间)");
 
+        // 性能审计开关 / Performance audit switch
+        performanceAuditEnabled = configuration.getBoolean(
+            "performanceAuditEnabled",
+            Configuration.CATEGORY_GENERAL,
+            performanceAuditEnabled,
+            "性能审计开关 / Performance audit switch\n"
+                + "默认 false：完全静默；开启后按 performanceAuditIntervalMinutes（默认 10 分钟）向日志输出 TPS/本mod每tick耗时/交互计数报告，需重启生效 / Default false: fully silent; when enabled, reports TPS/mod mspt/interaction counts per performanceAuditIntervalMinutes (default 10 minutes, requires restart)");
+
+        // 性能审计报告周期 / Performance audit report interval
+        performanceAuditIntervalMinutes = configuration.getInt(
+            "performanceAuditIntervalMinutes",
+            Configuration.CATEGORY_GENERAL,
+            performanceAuditIntervalMinutes,
+            1,
+            60,
+            "性能审计报告周期（分钟）/ Performance audit report interval (minutes)");
+
+        if (configuration.hasChanged()) {
+            configuration.save();
+        }
+    }
+
+    /**
+     * 同步无线网络配置文件 (gtswn_network.cfg)
+     * <p>
+     * 处理无线覆盖板的上下行损耗系数。从磁盘读取配置并更新静态变量，如果配置有变动则自动保存。
+     *
+     * @param configFile 配置文件对象 (config/gtswn/gtswn_network.cfg)
+     */
+    public static void synchronizeNetworkConfiguration(File configFile) {
+        Configuration configuration = new Configuration(configFile);
+
         // 下行损耗系数 / Downlink loss ratio
+        // 能源覆盖板从无线网络取电时，机器收到的 EU 不变，电网按 (1 + 此值) 倍率扣除。
+        // When energy cover draws EU from wireless network, machine receives full amount;
+        // network deducts (1 + this value) × EU.
+        // 默认 0.15 = 电网扣 1.15 倍 / Default 0.15 = network deducts 1.15×
         downlinkLossEU = configuration.getFloat(
             "DownlinkLossEU",
             Configuration.CATEGORY_GENERAL,
@@ -79,6 +188,11 @@ public class Config {
                 + "范围 0.0-10.0，默认 0.15 = 电网扣 1.15 倍 / Range 0.0-10.0, Default 0.15 = network deducts 1.15×");
 
         // 上行损耗系数 / Uplink loss ratio
+        // 动力覆盖板向无线网络送电时，机器扣减的 EU 不变，电网实际增加量按 (1 - 此值) 倍率计算。
+        // When dynamo cover outputs EU to wireless network, machine deducts full amount;
+        // network receives (1 - this value) × EU.
+        // 默认 0.0 = 无损耗；1.0 = 电网净增加为 0（上传不了任何 EU）
+        // Default 0.0 = no loss; 1.0 = network receives nothing (cannot upload any EU)
         uplinkLossEU = configuration.getFloat(
             "UplinkLossEU",
             Configuration.CATEGORY_GENERAL,
@@ -87,8 +201,15 @@ public class Config {
             1.0f,
             "上行损耗系数 / Uplink loss ratio\n" + "动力覆盖板向无线网络送电时，机器扣减的 EU 不变，电网实际增加量按 (1 - 此值) 倍率计算。\n"
                 + "When dynamo cover outputs EU to wireless network, machine deducts full amount; network receives (1 - this value) × EU.\n"
-                + "范围 0.0-1.0，默认 0.0 = 无损耗；1.0 = 电网净增加为 0 / Range 0.0-1.0, Default 0.0 = no loss; 1.0 = network receives nothing");
+                + "默认 0.0 = 无损耗；1.0 = 电网净增加为 0（上传不了任何 EU） / Default 0.0 = no loss; 1.0 = network receives nothing");
 
+        // === HUD 显示参数类目（独立顶层 hud 类目，与 general 平级） ===
+        // 配置项：HudXOffset / HudYOffset / HudScale
+        // 设置类目注释，说明本类目用途
+        configuration.setCategoryComment(CATEGORY_HUD, "HUD 显示参数（偏移与缩放）\nHUD display parameters (offset & scale)");
+
+        // HUD 水平偏移 / HUD horizontal offset
+        // 正值 = HUD 向右移动，负值 = HUD 向左移动 / positive = shift right, negative = shift left
         hudXOffset = configuration.getInt(
             "HudXOffset",
             CATEGORY_HUD,
@@ -99,6 +220,9 @@ public class Config {
                 + "正值 = HUD 向右移动，负值 = HUD 向左移动 / positive = shift right, negative = shift left\n"
                 + "默认 0 = 无偏移 / Default 0 = no offset");
 
+        // HUD 垂直偏移 / HUD vertical offset
+        // 正值 = HUD 向上移动，负值 = HUD 向下移动 / positive = shift up, negative = shift down
+        // 注意：屏幕坐标 Y 向下为正，此处正值语义为"上移"，渲染时以减法反转（hudY = baseY - hudYOffset）。
         hudYOffset = configuration.getInt(
             "HudYOffset",
             CATEGORY_HUD,
@@ -108,8 +232,11 @@ public class Config {
             "HUD 垂直偏移（像素）/ HUD vertical offset (pixels)\n"
                 + "正值 = HUD 向上移动，负值 = HUD 向下移动 / positive = shift up, negative = shift down\n"
                 + "注意：屏幕坐标 Y 向下为正，此处正值语义为上移（与屏幕坐标相反），渲染时以减法反转。\n"
+                + "Note: screen Y points down; positive here means up (inverted at render via subtraction).\n"
                 + "默认 0 = 无偏移 / Default 0 = no offset");
 
+        // HUD 缩放比例 / HUD scale ratio
+        // 1.0 = 默认大小，>1.0 放大，<1.0 缩小 / 1.0 = default, >1.0 enlarge, <1.0 shrink
         hudScale = configuration.getFloat(
             "HudScale",
             CATEGORY_HUD,
@@ -120,6 +247,101 @@ public class Config {
                 + "1.0 = 默认大小，>1.0 放大，<1.0 缩小 / 1.0 = default size, >1.0 enlarge, <1.0 shrink\n"
                 + "渲染时以 HUD 基准点为缩放原点，避免位置漂移 / Renderer uses HUD base point as scale origin to prevent drift\n"
                 + "范围 0.2-5.0，默认 1.0 / Range 0.2-5.0, Default 1.0");
+
+        // 控制 hud 类目内 key 的显示顺序：X偏移 → Y偏移 → 缩放
+        configuration.setCategoryPropertyOrder(CATEGORY_HUD, Arrays.asList("HudXOffset", "HudYOffset", "HudScale"));
+
+        // === 网络信息屏历史数据保留配置类目（v1.5.15 新增，独立顶层 network_info 类目） ===
+        configuration.setCategoryComment(
+            CATEGORY_NETWORK_INFO,
+            "网络信息屏历史数据保留配置 / Network info panel history retention configuration\n"
+                + "控制长期未活跃玩家数据集的清理策略 / Controls cleanup of inactive player datasets");
+
+        // 网络信息屏历史数据保留天数 / Network info panel history retention days
+        // 0 = 永不清理；超过此天数未采样的玩家数据将在服务器启动时清理
+        keepHistoryDays = configuration.getInt(
+            "keepHistoryDays",
+            CATEGORY_NETWORK_INFO,
+            keepHistoryDays,
+            0,
+            365,
+            "网络信息屏历史数据保留天数 / Network info panel history retention days\n"
+                + "超过此天数未采样的玩家数据将在服务器启动时清理 / Datasets not sampled within this many days will be cleaned at server startup\n"
+                + "0=永不清理（默认7天）/ 0=never clean (Default 7 days)");
+
+        if (configuration.hasChanged()) {
+            configuration.save();
+        }
+    }
+
+    /**
+     * 同步 AE2 网络监视配置文件
+     * <p>
+     * 处理 AE2 信息屏的采样间隔、最大监视项数、走势图采样点数与启用开关。
+     * 从传入的 {@link Configuration} 中读取 {@code [ae2]} 类目，更新静态变量；
+     * 如果配置有变动则自动保存。
+     *
+     * @param configuration 已打开的 AE2 配置 {@link Configuration} 对象
+     */
+    public static void synchronizeAEConfiguration(Configuration configuration) {
+        // 设置 [ae2] 类目注释 / Set [ae2] category comment
+        configuration.setCategoryComment(
+            CATEGORY_AE2,
+            "AE2 网络监视配置 / AE2 network monitoring configuration\n"
+                + "AE 信息屏采样与走势图参数 / AE panel sampling and chart parameters");
+
+        // AE2 监控采样间隔（tick）/ AE2 monitor sample interval (ticks)
+        aeSampleInterval = configuration.getInt(
+            "aeSampleInterval",
+            CATEGORY_AE2,
+            aeSampleInterval,
+            1,
+            6000,
+            "AE2 监控采样间隔（tick）/ AE2 monitor sample interval (ticks)\n"
+                + "数值越小采样越频繁，但会增加服务器负担 / Smaller value = more frequent sampling, higher server load\n"
+                + "默认 100 ticks = 5 秒 / Default 100 ticks = 5 seconds");
+
+        // AE2 实时监控最大监视项数 / AE2 real-time monitor max items
+        aeMaxMonitoredItems = configuration.getInt(
+            "aeMaxMonitoredItems",
+            CATEGORY_AE2,
+            aeMaxMonitoredItems,
+            1,
+            256,
+            "AE2 实时监控最大监视项数 / AE2 real-time monitor max items\n"
+                + "限制单个信息屏可同时监视的物品与流体总数 / Limits total items + fluids per panel\n"
+                + "默认 64 / Default 64");
+
+        // AE2 走势图最大采样点数 / AE2 chart max sample points
+        aeMaxSamplePoints = configuration.getInt(
+            "aeMaxSamplePoints",
+            CATEGORY_AE2,
+            aeMaxSamplePoints,
+            10,
+            120,
+            "AE2 走势图最大采样点数 / AE2 chart max sample points\n"
+                + "决定 5 分钟窗口保留多少个点（受内部 FIFO 容量 61 限制） / Determines how many points the 5-min window keeps (capped by FIFO capacity 61)\n"
+                + "默认 61 / Default 61");
+
+        // 是否启用 AE2 走势图 / Enable AE2 chart
+        aeChartEnabled = configuration.getBoolean(
+            "aeChartEnabled",
+            CATEGORY_AE2,
+            aeChartEnabled,
+            "是否启用 AE2 走势图 / Enable AE2 chart\n" + "关闭后不再采集 AE 监控数据 / Disables AE monitoring data sampling when false\n"
+                + "默认 true / Default true");
+
+        // ME 网络量子节点闲置功耗（AE/t）/ ME Network Quantum Node idle power usage (AE/t)（v1.6.1 问题 7）
+        // getFloat 返回 float， widening 赋值给 double 字段；默认值随字段初值 10.0
+        quantumNodeIdlePowerUsage = configuration.getFloat(
+            "quantumNodeIdlePowerUsage",
+            CATEGORY_AE2,
+            (float) quantumNodeIdlePowerUsage,
+            0.0F,
+            10000.0F,
+            "ME 网络量子节点闲置功耗（AE/t）/ ME Network Quantum Node idle power usage (AE/t)\n"
+                + "每个已桥接的量子节点都会给锚点所属 ME 网络增加此功耗 / Each bridged quantum node adds this power draw to the anchor ME network\n"
+                + "默认 10 / Default 10；v1.6.0 硬编码为 16 / Hardcoded to 16 in v1.6.0");
 
         if (configuration.hasChanged()) {
             configuration.save();

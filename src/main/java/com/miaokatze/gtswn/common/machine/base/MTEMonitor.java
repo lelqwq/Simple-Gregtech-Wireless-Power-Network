@@ -7,11 +7,12 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.StatCollector;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import com.gtnewhorizons.modularui.api.screen.ModularWindow;
-import com.gtnewhorizons.modularui.api.screen.UIBuildContext;
+import com.cleanroommc.modularui.factory.PosGuiData;
+import com.cleanroommc.modularui.screen.ModularPanel;
+import com.cleanroommc.modularui.screen.UISettings;
+import com.cleanroommc.modularui.value.sync.PanelSyncManager;
 
 import gregtech.api.interfaces.metatileentity.IMetaTileEntity;
-import gregtech.api.interfaces.modularui.IAddUIWidgets;
 import gregtech.api.interfaces.tileentity.IGregTechTileEntity;
 import gregtech.api.metatileentity.MetaTileEntity;
 
@@ -53,7 +54,7 @@ import gregtech.api.metatileentity.MetaTileEntity;
  * }
  * </pre>
  */
-public abstract class MTEMonitor extends MetaTileEntity implements IAddUIWidgets {
+public abstract class MTEMonitor extends MetaTileEntity {
 
     // === 核心字段 ===
 
@@ -68,7 +69,8 @@ public abstract class MTEMonitor extends MetaTileEntity implements IAddUIWidgets
      * 显示模式
      * <ul>
      * <li>0 = 常规计数（带逗号分隔，如 1,234,567）</li>
-     * <li>1 = 科学计数法（如 1.235×10^6）</li>
+     * <li>1 = 科学计数法（如 1.23E6）</li>
+     * <li>2 = 千位计数 K/M/G/T/P（如 1K / 2M / 3G）</li>
      * </ul>
      */
     protected int displayMode = 0;
@@ -237,15 +239,31 @@ public abstract class MTEMonitor extends MetaTileEntity implements IAddUIWidgets
     }
 
     /**
-     * 添加 UI 组件到 ModularUI 窗口
+     * 启用 ModularUI 2
      * <p>
-     * 子类可在此方法中添加文本、按钮、进度条等 Widget
+     * 监视器类机器默认使用 MUI2 框架（保留 cover tabs 支持），子类可覆盖此方法返回 false 以回退到 MUI1。
      *
-     * @param builder      UI 构建器
-     * @param buildContext UI 构建上下文
+     * @return 默认返回 true
      */
-    public void addUIWidgets(ModularWindow.Builder builder, UIBuildContext buildContext) {
-        // 默认空实现，子类按需添加 Widget
+    @Override
+    protected boolean useMui2() {
+        return true;
+    }
+
+    /**
+     * 构建 ModularUI 2 主面板
+     * <p>
+     * 子类按需覆盖此方法以构建自定义 GUI。基类返回 null，表示由子类负责具体实现。
+     *
+     * @param guiData     GUI 位置数据
+     * @param syncManager 同步管理器
+     * @param uiSettings  UI 设置
+     * @return 主面板，基类默认返回 null
+     */
+    @Override
+    public ModularPanel buildUI(PosGuiData guiData, PanelSyncManager syncManager, UISettings uiSettings) {
+        // 默认空实现，子类按需覆盖
+        return null;
     }
 
     // === 生命周期钩子 ===
@@ -394,7 +412,7 @@ public abstract class MTEMonitor extends MetaTileEntity implements IAddUIWidgets
     /**
      * 获取显示模式
      *
-     * @return 显示模式（0=常规计数，1=科学计数）
+     * @return 显示模式（0=常规计数，1=科学计数，2=千位计数）
      */
     protected int getDisplayMode() {
         return displayMode;
@@ -405,7 +423,7 @@ public abstract class MTEMonitor extends MetaTileEntity implements IAddUIWidgets
      * <p>
      * 调用此方法后应标记数据脏污以触发保存
      *
-     * @param mode 显示模式（0=常规计数，1=科学计数）
+     * @param mode 显示模式（0=常规计数，1=科学计数，2=千位计数）
      */
     protected void setDisplayMode(int mode) {
         this.displayMode = mode;

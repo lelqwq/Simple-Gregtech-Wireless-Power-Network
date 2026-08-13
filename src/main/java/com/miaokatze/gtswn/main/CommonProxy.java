@@ -3,22 +3,44 @@ package com.miaokatze.gtswn.main;
 import static com.miaokatze.gtswn.common.api.enums.GTSWNItemList.GTswn_Cover_Dynamo_Wireless;
 import static com.miaokatze.gtswn.common.api.enums.GTSWNItemList.GTswn_Cover_Energy_Wireless;
 
+import java.io.File;
+
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.World;
+import net.minecraftforge.common.ForgeChunkManager;
+import net.minecraftforge.common.MinecraftForge;
+
 import com.miaokatze.gtswn.Tags;
 import com.miaokatze.gtswn.common.command.CommandGTSWN;
 import com.miaokatze.gtswn.common.covers.GTswn_Cover_DynamoWireless;
 import com.miaokatze.gtswn.common.covers.GTswn_Cover_EnergyWireless;
+import com.miaokatze.gtswn.common.gui.GTSWNGuiHandler;
+import com.miaokatze.gtswn.common.panel.NetworkInfoDataStore;
+import com.miaokatze.gtswn.common.panel.NetworkInfoMonitorScheduler;
+import com.miaokatze.gtswn.common.performance.PerformanceAudit;
+import com.miaokatze.gtswn.common.quantum.QuantumChunkLoaderCallback;
+import com.miaokatze.gtswn.common.quantum.QuantumControllerEventHandler;
+import com.miaokatze.gtswn.common.tile.TileEntityNetworkInfoPanel;
 import com.miaokatze.gtswn.config.Config;
+import com.miaokatze.gtswn.crossmod.waila.WailaIntegration;
 import com.miaokatze.gtswn.loader.ItemLoader;
 import com.miaokatze.gtswn.loader.MachineLoader;
 import com.miaokatze.gtswn.network.GTSWNPacketHandler;
+import com.miaokatze.gtswn.network.PacketSyncAEMonitorData;
+import com.miaokatze.gtswn.network.PacketSyncQuantumTerminalData;
 import com.miaokatze.gtswn.recipe.CraftingRecipes;
 import com.miaokatze.gtswn.register.CreativeTabManager;
 import com.miaokatze.gtswn.register.TextureManager;
 
+import cpw.mods.fml.common.FMLCommonHandler;
+import cpw.mods.fml.common.Loader;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartedEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
+import cpw.mods.fml.common.network.NetworkRegistry;
 import gregtech.api.GregTechAPI;
 import gregtech.api.covers.CoverRegistry;
 import gregtech.api.render.TextureFactory;
@@ -34,7 +56,23 @@ public class CommonProxy {
      * 在此阶段读取配置文件，并将机器注册任务添加到 GregTech 的处理队列中。
      */
     public void preInit(FMLPreInitializationEvent event) {
-        Config.synchronizeConfiguration(event.getSuggestedConfigurationFile());
+        // 配置文件统一放在 config/gtswn/ 目录下
+        // Configurations are stored under config/gtswn/ directory
+        File suggestedConfigFile = event.getSuggestedConfigurationFile();
+        File configDir = new File(suggestedConfigFile.getParentFile(), "gtswn");
+        if (!configDir.exists() && !configDir.mkdirs()) {
+            GTSimpleWirelessNetwork.LOG.warn("无法创建配置目录: " + configDir.getAbsolutePath());
+        }
+        File mainConfigFile = new File(configDir, "gtswn.cfg");
+        File networkConfigFile = new File(configDir, "gtswn_network.cfg");
+        File aeConfigFile = new File(configDir, "gtswn_ae.cfg");
+        Config.synchronizeConfiguration(mainConfigFile);
+        Config.synchronizeNetworkConfiguration(networkConfigFile);
+        Config.synchronizeAEConfiguration(new net.minecraftforge.common.config.Configuration(aeConfigFile));
+        // v1.6.19：性能审计开关（preInit 配置读取后设置，重启生效；关闭时完全静默）
+        PerformanceAudit.setEnabled(Config.performanceAuditEnabled);
+        // v1.6.20：性能审计报告周期（分钟；preInit 配置读取后设置，重启生效）
+        PerformanceAudit.setReportIntervalMinutes(Config.performanceAuditIntervalMinutes);
 
         GTSimpleWirelessNetwork.LOG.info("GTSimpleWirelessNetwork 开始初始化 (版本: " + Tags.VERSION + ")");
 
@@ -58,24 +96,16 @@ public class CommonProxy {
             }
         };
 
-        // 将注册任务添加到 GregTech 的 sAfterGTLoad 队列
-        try {
-            if (GregTechAPI.sAfterGTLoad == null) {
-                GTSimpleWirelessNetwork.LOG.warn("警告: GregTechAPI.sAfterGTLoad 为空，无法添加注册任务。");
-            } else {
-                int before = GregTechAPI.sAfterGTLoad.size();
-                GregTechAPI.sAfterGTLoad.add(registerRunnable);
-                int after = GregTechAPI.sAfterGTLoad.size();
-                GTSimpleWirelessNetwork.LOG
-                    .info("[1/3] 已将机器注册任务加入 GregTech 加载队列 (队列大小: " + before + " -> " + after + ")");
-            }
-        } catch (Throwable t) {
-            GTSimpleWirelessNetwork.LOG.error("无法将注册任务添加到 GregTech 队列", t);
-        }
+        // 将机器注册任务加入 GregTechAPI.sAfterGTPreload 队列
+        // 由 GT5U 在其 PreInit 主体末尾（GTMod.java 行 342-344，紧接 LoaderMetaTileEntities.run 之后）代为触发
+        // 这是 GT5U 生态中第三方 mod 注册机器的推荐做法（参考 GigaGramFab.java 行 65-98）
+        // 前置条件：@Mod 注解声明 required-before:gregtech，确保本 mod 的 preInit 在 GT preInit 之前执行
+        GregTechAPI.sAfterGTPreload.add(registerRunnable);
+        GTSimpleWirelessNetwork.LOG.info("[1/3] 已将机器注册任务加入 GregTech sAfterGTPreload 队列。");
 
-        // 注册网络包通道（修复 SMP 下便携监测终端 HUD 恒显 0 EU 的问题）
-        GTSimpleWirelessNetwork.LOG.info("注册网络包通道...");
+        // 注册网络包通道（便携监测终端 EU 同步：修复客户端恒显示 0EU 的 Bug）
         GTSWNPacketHandler.register();
+        NetworkRegistry.INSTANCE.registerGuiHandler(GTSimpleWirelessNetwork.instance, new GTSWNGuiHandler());
     }
 
     /**
@@ -92,11 +122,52 @@ public class CommonProxy {
         GTSimpleWirelessNetwork.LOG.info(
             "[2/3] 创造模式物品栏初始化完成，当前包含 " + CreativeTabManager.getItemsToAdd()
                 .size() + " 个物品。");
+
+        // 注册无线 EU 监控调度器到 FMLCommonHandler 事件总线（server tick）
+        // 调度器在 ServerTickEvent END phase 每 100t 统一采样所有活跃玩家的 EU 数据
+        NetworkInfoMonitorScheduler scheduler = new NetworkInfoMonitorScheduler();
+        FMLCommonHandler.instance()
+            .bus()
+            .register(scheduler);
+        // 注入到 TileEntityNetworkInfoPanel 静态字段，供所有信息屏共享
+        TileEntityNetworkInfoPanel.setMonitorScheduler(scheduler);
+        GTSimpleWirelessNetwork.LOG.info("[2/3] 无线 EU 监控调度器已注册到事件总线。");
+
+        // 注册量子化控制器事件处理器（T2）：
+        // - Forge 事件总线：右键拦截 / 挖掘减速 / 邻接通知 / 破坏出册
+        // - FML 事件总线：ServerTickEvent 每秒巡检（连接过滤兜底 + D8 自动合并）
+        // 同一实例注册两条总线，内部冷却表/巡检 tick 计数状态共享
+        QuantumControllerEventHandler quantumHandler = new QuantumControllerEventHandler();
+        MinecraftForge.EVENT_BUS.register(quantumHandler);
+        FMLCommonHandler.instance()
+            .bus()
+            .register(quantumHandler);
+        GTSimpleWirelessNetwork.LOG.info("[2/3] 量子化控制器事件处理器已注册到双事件总线。");
+
+        // v1.6.19：注册性能审计 tick 结算监听（ServerTickEvent END；开关关闭时完全静默）
+        FMLCommonHandler.instance()
+            .bus()
+            .register(new PerformanceAudit.ServerTickListener());
+        GTSimpleWirelessNetwork.LOG.info("[2/3] 性能审计 tick 结算监听已注册到事件总线。");
+
+        // v1.6.2：WAILA 软集成——检测到 WAILA 才经 IMC 注册量子节点状态显示，无 WAILA 不影响运行
+        if (Loader.isModLoaded("Waila")) {
+            WailaIntegration.init();
+            GTSimpleWirelessNetwork.LOG.info("[2/3] 检测到 WAILA，量子节点状态显示已注册。");
+        }
+
+        // 注册旧版量子节点 ForgeChunkManager Ticket 清理 callback。
+        // 必须在 init 阶段（ForgeChunkManager 已就绪、worlds 尚未加载）注册，
+        // 服务器重启加载旧 forcedchunks.dat 时 callback.ticketsLoaded 会释放遗留 Ticket；
+        // 当前量子节点不再申请或主动强制加载区块。
+        ForgeChunkManager
+            .setForcedChunkLoadingCallback(GTSimpleWirelessNetwork.instance, new QuantumChunkLoaderCallback());
+        GTSimpleWirelessNetwork.LOG.info("[2/3] 量子节点旧版 Ticket 清理 callback 已注册。");
     }
 
     /**
      * 后初始化阶段 (PostInit)
-     * 处理与其他模组的交互或完成最终设置，如注册测试配方。
+     * 处理与其他模组的交互或完成最终设置，如注册合成配方。
      */
     @SuppressWarnings({ "unused" })
     public void postInit(FMLPostInitializationEvent event) {
@@ -141,23 +212,98 @@ public class CommonProxy {
     }
 
     /**
+     * 服务器已启动阶段（v1.5.15 新增）。
+     * <p>
+     * 在此阶段所有世界已加载，可安全获取 overworld 并执行 WorldSavedData 清理。
+     * 用于清理超过 {@link Config#keepHistoryDays} 天未采样的网络信息屏历史数据集，避免内存泄漏。
+     */
+    @SuppressWarnings({ "unused" })
+    public void serverStarted(FMLServerStartedEvent event) {
+        // 仅在配置启用清理时执行（keepHistoryDays=0 表示永不清理）
+        if (Config.keepHistoryDays <= 0) {
+            return;
+        }
+        try {
+            // 获取 overworld（dimension 0），NetworkInfoDataStore 存储在 perWorldStorage 中
+            World overworld = MinecraftServer.getServer()
+                .worldServerForDimension(0);
+            if (overworld == null) {
+                GTSimpleWirelessNetwork.LOG.warn("[serverStarted] overworld 不可用，跳过网络信息屏历史数据清理");
+                return;
+            }
+            long cutoffMs = System.currentTimeMillis() - Config.keepHistoryDays * 24L * 3600L * 1000L;
+            int removed = NetworkInfoDataStore.get(overworld)
+                .cleanupStale(cutoffMs);
+            if (removed > 0) {
+                GTSimpleWirelessNetwork.LOG
+                    .info("[serverStarted] 已清理 " + removed + " 个超过 " + Config.keepHistoryDays + " 天未采样的网络信息屏数据集");
+            }
+        } catch (Throwable t) {
+            GTSimpleWirelessNetwork.LOG.error("[serverStarted] 清理网络信息屏历史数据时发生错误", t);
+        }
+    }
+
+    /**
      * 模组加载完成阶段
      * 如果之前注册失败，可以在此处进行最后的补救尝试。
      */
     public void loadComplete(cpw.mods.fml.common.event.FMLLoadCompleteEvent event) {}
 
     /**
-     * 处理服务端→客户端 EU 响应包（客户端专用逻辑）。
+     * 【hotfix v1.5.14】处理服务端→客户端 EU 响应包（客户端专用逻辑）。
      * <p>
      * 服务端空实现：此包只发往客户端，服务端收到也不会调用本方法。
      * 客户端逻辑由 {@link ClientProxy#handleResponseEU} 重写。
      * <p>
-     * 设计（沿用上游 v1.5.14 hotfix）：不在包 Handler 方法体中直接引用客户端类，
-     * 统一通过 @SidedProxy 委托，避免现代 JVM 下类加载触发 SideTransformer 剥离而崩服。
+     * 【为什么这样设计】原 {@code PacketResponseWirelessEU.Handler} 直接调用
+     * {@code Minecraft.getMinecraft().func_152344_a(...)}，虽然 Minecraft 类本身无 @SideOnly 注解
+     * 当前不崩溃，但为了一致性和健壮性，统一通过 @SidedProxy 委托，避免 Handler 类方法体
+     * 引用客户端 API。
      *
      * @param euStr 服务端传来的 EU 字符串
      */
     public void handleResponseEU(String euStr) {
         // 服务端空实现：此包只发往客户端
+    }
+
+    /**
+     * 【hotfix v1.5.14】处理服务端→客户端 AE 监控数据同步包（客户端专用逻辑）。
+     * <p>
+     * 服务端空实现：此包只发往客户端，服务端收到也不会调用本方法。
+     * 客户端逻辑由 {@link ClientProxy#handleSyncAEMonitorData} 重写。
+     * <p>
+     * 【为什么这样设计】原 {@code PacketSyncAEMonitorData.Handler} 直接调用
+     * {@code Minecraft.getMinecraft().theWorld}，而 {@code Minecraft.theWorld} 字段
+     * 声明类型是 {@code WorldClient}（@SideOnly(Side.CLIENT)）。在 Java 25 JVM + Forge 1.7.10 下，
+     * {@code SimpleNetworkWrapper.registerMessage} 调用 {@code Handler.class.newInstance()}
+     * 会触发 {@code getDeclaredConstructors0()} 解析方法体引用类型，导致 WorldClient 被加载，
+     * 被 SideTransformer 拒绝，抛出 NoClassDefFoundError 崩服。
+     * 通过 @SidedProxy 委托，Handler 类方法体不再引用任何客户端类，彻底避免类加载触发。
+     *
+     * @param msg AE 监控数据同步包
+     */
+    public void handleSyncAEMonitorData(PacketSyncAEMonitorData msg) {
+        // 服务端空实现：此包只发往客户端
+    }
+
+    /**
+     * 处理服务端→客户端 量子终端数据同步包（客户端专用逻辑）。
+     * <p>
+     * 服务端空实现：此包只发往客户端，服务端收到也不会调用本方法。
+     * 客户端逻辑由 {@link ClientProxy#handleSyncQuantumTerminalData} 重写。
+     * <p>
+     * 【为什么这样设计】与 {@link #handleSyncAEMonitorData} 相同的 hotfix v1.5.14 模式：
+     * 包 Handler 方法体不得引用 @SideOnly(Side.CLIENT) 客户端类（如 Minecraft/GuiScreen），
+     * 否则 registerMessage 时类加载解析会在服务端被 SideTransformer 拒绝崩服。
+     * 统一经 @SidedProxy 委托，Handler 只引用双端类型。
+     *
+     * @param msg 量子终端数据同步包
+     */
+    public void handleSyncQuantumTerminalData(PacketSyncQuantumTerminalData msg) {
+        // 服务端空实现：此包只发往客户端
+    }
+
+    public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
+        return null;
     }
 }

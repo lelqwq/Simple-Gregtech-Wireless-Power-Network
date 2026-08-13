@@ -28,6 +28,14 @@ public enum GTSWNItemList implements IItemContainer {
     GTswn_Cover_Energy_Wireless,
     // 无线动力覆盖板（输出）
     GTswn_Cover_Dynamo_Wireless,
+    // 网络信息屏
+    Network_Info_Panel,
+    // 网络信息拓展屏
+    Network_Info_Panel_Extender,
+    // ME 网络量子终端（T1 存根：仅注册，手势逻辑 T3 实现）
+    ME_Network_Quantum_Terminal,
+    // ME 网络量子节点（T1 存根：仅注册，桥接逻辑 T4 实现）
+    ME_Network_Quantum_Node,
     // 测试硬币（测试环境道具：右键 +100万 EU，Shift+右键 -100万 EU）
     TestCoin;
 

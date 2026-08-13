@@ -60,6 +60,9 @@ dependencies {
     // HUD 饰品栏扫描在 Baubles 不存在时安全降级（try/catch）
     compileOnly("com.github.GTNewHorizons:Baubles-Expanded:2.2.6-GTNH:dev") { transitive = false }
 
+    // WAILA: compileOnly — 可选软集成（量子节点在线/离线状态显示），无 WAILA 时不加载相关类
+    compileOnly("com.github.GTNewHorizons:waila:1.19.30:dev") { transitive = false }
+
     // UniMixins is automatically included by the GTNH build script because usesMixins = true in gradle.properties.
     // No need to declare it manually.
 

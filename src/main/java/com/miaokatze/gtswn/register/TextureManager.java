@@ -16,15 +16,8 @@ import gregtech.api.render.TextureFactory;
  */
 public class TextureManager {
 
-    // --- 测试机器专用材质图标 ---
-    /** EV 等级测试机器顶部材质 */
-    public static final IIconContainer TEX_TEST_EV = new Textures.BlockIcons.CustomIcon("gtswn:MTETEST_1");
-    /** IV 等级测试机器顶部材质 */
-    public static final IIconContainer TEX_TEST_IV = new Textures.BlockIcons.CustomIcon("gtswn:MTETEST_2");
-    /** LuV 等级测试机器顶部材质 */
-    public static final IIconContainer TEX_TEST_LUV = new Textures.BlockIcons.CustomIcon("gtswn:MTETEST_3");
-
     // --- 无线能量监视器材质图标 ---
+    // 2.8.4 适配：GT5U 5.09.51.x 没有 BlockIcons.custom()（5.09.52+ 专属），改用 CustomIcon 构造器
     /** 无线能量监视器正面材质（红石信号关闭） */
     public static final IIconContainer TEX_WIRELESS_MONITOR_OFF = new Textures.BlockIcons.CustomIcon(
         "gtswn:Wireless_Energy_Monitor_OFF");
@@ -51,7 +44,7 @@ public class TextureManager {
      * @param icon GregTech 内置的方块图标枚举
      * @return 对应的 ITexture 实例
      */
-    public static ITexture getOrCreateTexture(String name, Textures.BlockIcons icon) {
+    public static ITexture getOrCreateTexture(String name, IIconContainer icon) {
         return textureCache.computeIfAbsent(name, k -> TextureFactory.of(icon));
     }
 

@@ -1,42 +1,28 @@
-tile.gtswn.mtetest.name=测试太阳能机
-gtswn.tooltip.mtetest.info=白天且上方可见天空时产生能量，雨天降低效率。
-
-# MTETest tier names (updated to gtswn prefix)
-gtswn.machine.test.ev=测试无线输电终端 (EV)
-gtswn.machine.test.iv=测试无线输电终端 (IV)
-gtswn.machine.test.luv=测试无线输电终端 (LuV)
-gtswn.machine.multitest.hv=测试多方块机器 (HV)
-
-# GregTech style keys used by CommonMetaTileEntity
-gt.blockmachines.gtswn.mtetest.ev.name=测试太阳能机 EV
-gt.blockmachines.gtswn.mtetest.iv.name=测试太阳能机 IV
-gt.blockmachines.gtswn.mtetest.luv.name=测试太阳能机 LuV
-gt.blockmachines.gtswn.multitest.hv.name=测试多方块机器 (HV)
-gtswn.recipe.multitest=测试多方块机器
-
 # Items
-item.TestCoin_GTswn.name=测试硬币
-item.TestCoin_GTswn_E.name=电子测试硬币
 item.PortableWirelessNetworkMonitor_GTswn.name=便携式无线网络监测终端
+item.TestCoin_GTswn.name=测试硬币
+item.MENetworkQuantumTerminal_GTswn.name=ME网络量子终端
 
 # Machines
 gtswn.machine.wireless_monitor=无线能量监视器
 gt.blockmachines.gtswn.wireless_energy_monitor.name=无线能量监视器
 
 # Wireless Energy Monitor Description
-gtswn.desc.wireless_monitor.line1=§b用于监测无线网络，智能计算网络功率
-gtswn.desc.wireless_monitor.line2=§b智能输出红石信号，可切换多模式
-gtswn.desc.wireless_monitor.line3=§9来源MOD：GTSimpleWirelessNetwork
+gtswn.desc.wireless_monitor.line1=§b用于监测无线网络，§a智能计算网络功率
+gtswn.desc.wireless_monitor.line2=§b智能输出红石信号，§e可切换多模式
+gtswn.desc.wireless_monitor.line3=§9来源MOD：§fGTSimpleWirelessNetwork
+gtswn.desc.wireless_monitor.line4=§e建议对机器所在区块进行§c常态加载
+gtswn.desc.wireless_monitor.line5=§b重载策略: §f短时(≤§e10秒§f)§a自动续传§f，长时(>§e10秒§f)§6启用30秒红石缓冲
+gtswn.desc.wireless_monitor.line6=§b电网状态: §f每§e5秒§f检测，§a300秒§f窗口均值，含§7静默§f/§8长期静默§f(≥§a300秒§f)判定
+gtswn.desc.wireless_monitor.line7=§b冷启动: §f重载/重进触发，§e数据集<61即冷启动计算
 
 # Wireless Energy Monitor UI
 gtswn.ui.title=无线能量监视器
 gtswn.ui.mode.normal=§b模式: §f常规计数
-gtswn.ui.mode.scientific=§e模式: §f科学计数
+gtswn.ui.mode.scientific=§b模式: §f科学计数
+gtswn.ui.mode.metric=§b模式: §f千位计数
 gtswn.ui.wireless.energy=§b无线电网能量: §f%s §bEU
 gtswn.ui.wireless.energy.scientific=§b无线电网能量: §f%s §bEU
-gtswn.ui.network.status.up=§b电网状态: §a↑ +%s §bEU/t (§f%s§b)
-gtswn.ui.network.status.down=§b电网状态: §c↓ -%s §bEU/t (§f%s§b)
-gtswn.ui.network.status.nochange=§b电网状态: §f暂无变化/计算中
 gtswn.ui.redstone.mode=§b红石模式: §f%s
 gtswn.ui.redstone.mode.off=关闭
 gtswn.ui.redstone.mode.high=高电平
@@ -56,21 +42,19 @@ gtswn.ui.param1=§b参数1: §f%s
 gtswn.ui.param2=§b参数2: §f%s
 gtswn.ui.tooltip.toggle.mode=改变计数模式
 gtswn.ui.tooltip.toggle.redstone=切换红石模式
+gtswn.ui.tooltip.toggle.anchor=切换锚定参数（电网电量/电网状态）
 gtswn.ui.tooltip.param1.minus=参数1 -最高位
 gtswn.ui.tooltip.param1.plus=参数1 +最高位
 gtswn.ui.tooltip.param1.mul10=参数1 ×10
 gtswn.ui.tooltip.param1.div10=参数1 ÷10
-gtswn.ui.tooltip.param1.reset=参数1 清零
 gtswn.ui.tooltip.param2.minus=参数2 -最高位
 gtswn.ui.tooltip.param2.plus=参数2 +最高位
 gtswn.ui.tooltip.param2.mul10=参数2 ×10
 gtswn.ui.tooltip.param2.div10=参数2 ÷10
-gtswn.ui.tooltip.param2.reset=参数2 清零
 
 # HUD Text
-gtswn.hud.network.status=平均电网状态
+# HUD 重载过渡期显示文本（首次接收同步前的占位状态）
 gtswn.hud.network.status.calculating=计算中...
-gtswn.hud.network.realtime_status=实时电网状态
 gtswn.hud.wireless.network=无线电网
 gtswn.hud.eu.unit=EU
 gtswn.hud.eut.unit=EU/t
@@ -79,7 +63,15 @@ gtswn.hud.eut.unit=EU/t
 gtswn.tooltip.monitor.hud.mode.off=§cHUD: 关闭
 gtswn.tooltip.monitor.hud.mode.normal=§bHUD: 常规计数
 gtswn.tooltip.monitor.hud.mode.scientific=§eHUD: 科学计数
-gtswn.tooltip.monitor.usage=§7右键切换 HUD 模式
+gtswn.tooltip.monitor.usage=§e右键§f切换 HUD 模式
+gtswn.tooltip.monitor.baubles.equip=§f可在 §bBaubles 饰品栏§f任意槽位装备
+# 便携式机制说明（v1.3.0 新增，3 行简略形式）
+gtswn.tooltip.monitor.mechanism.line1=§b电网状态: §f每§e5秒§f检测，§a300秒§f窗口均值
+gtswn.tooltip.monitor.mechanism.line2=§b静默判定: §f含§7静默§f/§8长期静默§f(≥§a300秒§f)判定
+gtswn.tooltip.monitor.mechanism.line3=§b冷启动: §f退出重进触发，§e数据集随退出重置
+
+# NC2 工业信息屏信息（通过 GT 传感器套件）
+gtswn.info.energy=§7能量: %s
 
 # Chat Messages
 gtswn.chat.monitor.bound=§a[便携监测终端] 已绑定拥有者: %s
@@ -93,17 +85,8 @@ gtswn.chat.monitor.mode.scientific=§e科学计数
 # Wireless Energy Tap
 item.wirelessEnergyTap.name=无线网络链路终端
 item.wirelessEnergyTap.desc=连接能量容器到GT无线电网
-tooltip.wireless_energy_tap.tier=电压等级: %s
-tooltip.wireless_energy_tap.mode=当前模式: %s
-tooltip.wireless_energy_tap.mode.input=能源链接（从电网获取）
-tooltip.wireless_energy_tap.mode.output=动力链接（向电网输出）
 gtswn.tooltip.tap.mode.input=当前模式: 能源链接（从电网获取）
 gtswn.tooltip.tap.mode.output=当前模式: 动力链接（向电网输出）
-chat.wireless_energy_tap.no_container=不是能量容器
-chat.wireless_energy_tap.no_capacity=无电容方块，无法链接
-chat.wireless_energy_tap.no_voltage=无电压设置，无法链接
-chat.wireless_energy_tap.default_amperage=无电流等级，默认链接为2A
-chat.wireless_energy_tap.success=链接成功
 gtswn.chat.tap.mode.input=§a[链路终端] 已切换为能源链接模式
 gtswn.chat.tap.mode.output=§a[链路终端] 已切换为动力链接模式
 gtswn.chat.tap.not_energy_container=§c[链路终端] 不是能量容器
@@ -120,7 +103,7 @@ gtswn.chat.tap.cover_item=§7 覆盖板:
 gtswn.chat.tap.machine_detected=§a[链路终端] 检测到机器：
 gtswn.chat.tap.capacity=§7 电容: 
 gtswn.chat.tap.voltage=§7 电压: 
-gtswn.chat.tap.amperage=§7 电流:
+gtswn.chat.tap.amperage=§7 电流: 
 gtswn.chat.tap.cannot_place_cover=§c[链路终端] 无法在此面放置覆盖板！
 gtswn.chat.tap.cover_exists=§c[链路终端] 该面已存在覆盖板，请先移除！
 gtswn.chat.tap.attaching=§e[链路终端] 正在附着
@@ -130,8 +113,8 @@ gtswn.chat.tap.attaching_suffix=§e模式覆盖板...
 gtswn.chat.tap.link_success=§a[链路终端] 链接成功！
 gtswn.chat.tap.mode_text=§7 模式: 
 gtswn.chat.tap.voltage_tier=§7 电压等级: 
-gtswn.chat.tap.amperage_tier=§7 电流等级:
-gtswn.chat.tap.cover_capacity=§b 覆盖板电容:
+gtswn.chat.tap.amperage_tier=§7 电流等级: 
+gtswn.chat.tap.cover_capacity=§b 覆盖板电容: 
 gtswn.chat.tap.cannot_get_cover=§c[链路终端] 无法获取覆盖板！
 gtswn.chat.tap.no_cover_support=§c[链路终端] 机器不支持覆盖板
 gtswn.chat.tap.bind_notify=§e[链路终端] 绑定的是机器拥有者的电网，请确认团队已经共享了电网（该信息还会出现 %d 次）。
@@ -139,16 +122,197 @@ gtswn.chat.tap.bind_notify=§e[链路终端] 绑定的是机器拥有者的电�
 # Wireless Cover Right-Click Config
 gtswn.chat.cover.energy_config=GTswn链路终端（能源）配置：
 gtswn.chat.cover.dynamo_config=GTswn链路终端（动力）配置：
-gtswn.chat.cover.voltage_tier=电压等级:
-gtswn.chat.cover.amperage_tier=电流等级:
-gtswn.chat.cover.capacity=电容量:
-gtswn.chat.cover.stored_eu=当前缓存:
-gtswn.chat.cover.next_refill=§7 距下次补能:
-gtswn.chat.cover.next_upload=§7 距下次上传:
+gtswn.chat.cover.voltage_tier=电压等级: 
+gtswn.chat.cover.amperage_tier=电流等级: 
+gtswn.chat.cover.capacity=电容量: 
+gtswn.chat.cover.stored_eu=当前缓存: 
 gtswn.chat.cover.not_configured=尚未配置！
-gtswn.command.join.usage=用法: /gtswn global_energy_join <memberUUID> <leaderUUID>
-gtswn.command.join.same_uuid=§e成员UUID与队长UUID相同，无需加入
-gtswn.command.join.cycle_detect=§c循环检测: %s 是 %s 的队长，无法将 %s 加入 %s 的网络
-gtswn.command.join.cascade_warn=§e注意: %s 的队长为 %s，%s 将加入 %s 的网络
+
+# GTSWN Command - global_energy_join
 gtswn.command.join.success=§a加入成功: %s 已加入 %s 的无线网络
+gtswn.command.join.same_uuid=§e成员UUID与队长UUID相同，无需加入
+gtswn.command.join.cascade_warn=§e注意: %s 的队长为 %s，%s 将加入 %s 的网络
+gtswn.command.join.cycle_detect=§c循环检测: %s 是 %s 的队长，无法将 %s 加入 %s 的网络
 gtswn.command.join.network_eu=§b目标网络当前总量: %s EU
+gtswn.command.join.usage=用法: /gtswn global_energy_join <memberUUID> <leaderUUID>
+
+# Cover Timer
+gtswn.chat.cover.next_refill=§7 距下次补能: 
+gtswn.chat.cover.next_upload=§7 距下次上传: 
+
+# Network Info Panel
+tile.NetworkInfoPanel_GTswn.name=网络信息屏
+tile.NetworkInfoPanelExtender_GTswn.name=网络信息拓展屏
+tile.NetworkQuantumNode_GTswn.name=ME网络量子节点
+gtswn.network_info.owner=拥有者：%s
+gtswn.network_info.energy=能量：%s EU
+gtswn.network_info.unknown=未知
+gtswn.network_info.status.cold=冷启动中...
+gtswn.network_info.status.silent=0 EU/t（静默）
+gtswn.network_info.status.longtermsilent=0 EU/t（长期静默）
+gtswn.network_info.status.lessthan1=0 EU/t（<1EU）
+gtswn.network_info.status.up=+%s EU/t（%s）
+gtswn.network_info.status.down=-%s EU/t（%s）
+gtswn.network_info.gui.title=网络信息屏
+gtswn.network_info.gui.brief.eu=简报 EU
+gtswn.network_info.gui.chart.eu=图表 EU
+gtswn.network_info.gui.window=时长
+gtswn.network_info.gui.on=开
+gtswn.network_info.gui.off=关
+# 信息屏显示模式按钮（目标3新增）
+gtswn.network_info.gui.mode.normal=常规计数
+gtswn.network_info.gui.mode.scientific=科学计数
+gtswn.network_info.gui.mode.metric=千位计数
+gtswn.network_info.screen.title=无线 EU 网络
+gtswn.network_info.screen.energy=电网容量：%s
+gtswn.network_info.screen.history=历史 %s
+gtswn.network_info.screen.collecting=收集中... %d/2
+gtswn.network_info.gui.apply=应用
+gtswn.network_info.gui.chart_settings=图表样式
+gtswn.network_info.gui.energy_y_min=容量Y最小
+gtswn.network_info.gui.energy_y_max=容量Y最大
+gtswn.network_info.gui.eut_y_min=状态Y最小
+gtswn.network_info.gui.eut_y_max=状态Y最大
+gtswn.network_info.gui.border_width=边框
+gtswn.network_info.gui.line_width=走势线
+gtswn.network_info.gui.smoothing=样条密度
+gtswn.network_info.gui.chart_bg=图表背景
+gtswn.network_info.gui.screen_bg=屏幕背景
+gtswn.network_info.gui.blank_auto=留空=自动/无
+gtswn.network_info.screen.now=现在
+gtswn.network_info.screen.time_axis=时间
+gtswn.network_info.screen.energy_axis=电网容量（EU）
+
+# v1.5.4 AE 信息屏 TESR 标签
+gtswn.network_info.screen.ae_chart_empty=未绑定
+gtswn.network_info.screen.ae_monitor_empty=暂无监控项
+gtswn.network_info.screen.collecting_value=收集中...
+gtswn.network_info.screen.ae_chart_current=当前存量：%s
+gtswn.network_info.screen.ae_chart_rate=实时变化速率：%s/min
+gtswn.network_info.screen.ae_chart_avg_rate=平均变化速率：%s/min
+gtswn.network_info.screen.ae_chart_hint=手持物品右键方块以绑定
+gtswn.network_info.screen.ae_monitor_title=AE 网络监控
+gtswn.network_info.screen.ae_online=在线
+gtswn.network_info.screen.ae_offline=离线
+gtswn.network_info.screen.ae_offline_overlay=AE 网络离线
+gtswn.network_info.screen.ae_axis=AE 存量
+gtswn.network_info.screen.ae_rate_axis=AE 变化率
+gtswn.network_info.screen.ae_chart_no_line=未选择走势线
+gtswn.network_info.screen.ae_monitor_header_name=名称
+gtswn.network_info.screen.ae_monitor_header_amount=存量
+gtswn.network_info.screen.ae_monitor_header_rate=实时变化量
+gtswn.network_info.screen.ae_monitor_header_avg=平均变化量
+gtswn.network_info.screen.ae_monitor_too_small=面板空间不足
+gtswn.network_info.screen.ae_monitor_grid_truncated=...
+
+# 1.4.4 状态命名与实时 EU/t
+# 静默/<1EU/重载中/长期静默 四种特殊状态显示（来自 MTEWirelessEnergyMonitor / WirelessMonitorHUD 的边界判定）
+gtswn.ui.network.status.up=§b平均电网状态：§a+%s §bEU/t (§f%s§b)
+gtswn.ui.network.status.down=§b平均电网状态：§c-%s §bEU/t (§f%s§b)
+gtswn.ui.network.status.nochange=§b平均电网状态：§f暂无变化/计算中
+gtswn.ui.network.status.silent=§b平均电网状态：§f0 §bEU/t (§7静默§b)
+gtswn.ui.network.status.longtermsilent=§b平均电网状态：§f0 §bEU/t (§8长期静默§b)
+gtswn.ui.network.status.lessthan1=§b平均电网状态：§f0 §bEU/t (§7<1EU§b)
+gtswn.ui.network.status.reload=§b平均电网状态：§c重载计算中，红石逻辑维持
+gtswn.ui.network.realtime_status.up=§b实时电网状态：§a+%s §bEU/t (§f%s§b)
+gtswn.ui.network.realtime_status.down=§b实时电网状态：§c-%s §bEU/t (§f%s§b)
+gtswn.ui.network.realtime_status.nochange=§b实时电网状态：§f暂无变化/计算中
+gtswn.ui.network.realtime_status.silent=§b实时电网状态：§f0 §bEU/t (§7静默§b)
+gtswn.ui.network.realtime_status.lessthan1=§b实时电网状态：§f0 §bEU/t (§7<1EU§b)
+gtswn.ui.network.realtime_status.reload=§b实时电网状态：§c重载计算中
+gtswn.hud.network.status=平均电网状态
+gtswn.hud.network.realtime_status=实时电网状态
+gtswn.info.average_status=§7平均状态：%s
+gtswn.info.realtime_status=§7实时状态：%s
+gtswn.network_info.status=实时状态：%s
+gtswn.network_info.screen.status=实时电网状态：%s
+gtswn.network_info.gui.brief_ratio=简报字号：%d%%
+gtswn.network_info.gui.brief.status=简报实时状态
+gtswn.network_info.gui.chart.eut=图表实时EU/t
+gtswn.network_info.screen.eut_axis=实时电网状态（EU/t）
+
+# v1.5.1 AE 标签页
+gtswn.network_info.gui.tab.eu=无线 EU 网络
+gtswn.network_info.gui.tab.ae_chart=AE 走势图
+gtswn.network_info.gui.tab.ae_monitor=AE 实时监控
+gtswn.network_info.gui.ae.chart.empty=未绑定
+gtswn.network_info.gui.ae.rightclick_hint=手持物品右键方块配置
+gtswn.network_info.gui.ae.monitor.empty=暂无监控项
+gtswn.network_info.gui.ae.monitor.header_icon=图标
+gtswn.network_info.gui.ae.monitor.header_name=名称
+gtswn.network_info.gui.ae.monitor.header_amount=存量
+# v1.5.4 AE 配置界面新增
+gtswn.network_info.gui.ae.chart_settings=图表样式
+gtswn.network_info.gui.ae.window=AE 时长
+gtswn.network_info.gui.ae.window.5min=5分钟
+gtswn.network_info.gui.ae.window.1h=1小时
+gtswn.network_info.gui.ae.window.8h=8小时
+gtswn.network_info.gui.ae.window.24h=24小时
+gtswn.network_info.gui.ae.window.7d=7天
+gtswn.network_info.gui.ae.window.1M=1月
+gtswn.network_info.gui.ae.window.3M=3月
+gtswn.network_info.gui.ae.window.1Y=1年
+gtswn.network_info.gui.ae.remove=移除
+gtswn.network_info.gui.ae.clear_all=全部清除
+# v1.5.5 AE 走势图按钮与监控列表新增
+gtswn.network_info.gui.ae.brief=简报 AE
+gtswn.network_info.gui.ae.chart.amount=图表存量
+gtswn.network_info.gui.ae.chart.rate=图表变化率
+gtswn.network_info.gui.ae.monitor.brief=AE 状态：%s | 监控项：%d
+gtswn.network_info.gui.ae.monitor.header_remove=清除
+gtswn.network_info.chat.bind_item=已绑定走势图物品：%s
+gtswn.network_info.chat.bind_fluid=已绑定走势图流体：%s
+gtswn.network_info.chat.add_item=已添加监视：%s
+gtswn.network_info.chat.remove_item=已移除监视：%s
+gtswn.network_info.chat.add_fluid=已添加流体监视：%s
+gtswn.network_info.chat.remove_fluid=已移除流体监视：%s
+gtswn.network_info.chat.clear=已清除走势图绑定
+# v1.5.8 AE 实时监控 UI 修正
+gtswn.network_info.gui.ae.line_color=走势线颜色
+gtswn.network_info.gui.ae.monitor.font_size=字号
+gtswn.network_info.gui.ae.monitor.bold=加粗
+gtswn.network_info.gui.ae.monitor.render_mode.list=条目
+gtswn.network_info.gui.ae.monitor.render_mode.grid=格子
+gtswn.network_info.gui.ae.monitor.icon_size=图标大小
+gtswn.network_info.gui.ae.monitor.header_realtime=实时变化量
+gtswn.network_info.gui.ae.monitor.header_average=平均变化量
+
+# ME Network Quantum Terminal (T2 事件拦截 / T3 终端手势)
+gtswn.tooltip.quantum_terminal.unbound=§7未绑定网络——右击运行中的ME控制器进行量子化绑定
+gtswn.tooltip.quantum_terminal.bound=§b已绑定: §f%s [%d, %d, %d]
+gtswn.tooltip.quantum_terminal.power_requirement=§e需要 ME 网络保持供电（请在量子化控制器前接入能源元件）
+gtswn.tooltip.quantum_terminal.usage.controller=§7右击控制器: §f量子化并绑定（已量子化则改绑）
+gtswn.tooltip.quantum_terminal.usage.dequantize=§7Shift+右击控制器: §f取消量子化并解绑
+gtswn.tooltip.quantum_terminal.usage.place=§7右击方块: §f放置量子节点
+gtswn.tooltip.quantum_terminal.usage.pickup=§7Shift+右击量子节点: §f销毁节点（无掉落）
+gtswn.tooltip.quantum_terminal.usage.gui=§7Shift+右击空气: §f打开终端界面
+gtswn.chat.quantum.quantized=§a[量子终端] 控制器结构已量子化（%d 块），网络总频道: %d
+gtswn.chat.quantum.quantized_infinite=§a[量子终端] 控制器结构已量子化（%d 块），频道：无限
+gtswn.chat.quantum.bound=§b[量子终端] 已绑定到网络 [%d, %d, %d]
+gtswn.chat.quantum.dequantized=§e[量子终端] 已取消量子化
+gtswn.chat.quantum.not_active=§c[量子终端] 目标不是正常运行的ME控制器
+gtswn.chat.quantum.no_permission=§c[量子终端] 没有该网络的权限
+gtswn.chat.quantum.need_bind=§c[量子终端] 请先绑定一个量子化控制器
+gtswn.chat.quantum.node_placed=§a[量子终端] 量子节点已接入网络
+gtswn.chat.quantum.node_offline=§c[量子节点] 锚点控制器不可达，节点离线
+gtswn.chat.quantum.node_online=§a[量子节点] 节点在线，已桥接至锚点网络（32 频道容量）
+gtswn.chat.quantum.node_offline_not_quantized=§c[量子节点] 锚点控制器未量子化
+gtswn.chat.quantum.node_destroyed=§a[量子节点] 已销毁量子节点
+gtswn.chat.quantum.blocked=§c[量子化] 该控制器已量子化，仅能量交互设备可用
+gtswn.chat.quantum.merged=§a[量子化] %d 块新控制器已自动并入量子化结构
+gtswn.chat.quantum.warning_95=§e[量子节点] 警告：网络频道使用已达 95%%（%d/%d），继续接入将导致控制器爆炸！
+gtswn.chat.quantum.overload_warning=§4[量子节点] 警告：频道超限！量子网络将在 {0} 后爆炸，请立即断开多余设备或节点
+gtswn.chat.quantum.overload_cancelled=§a[量子节点] 频道占用已恢复，爆炸已取消
+
+# ME Network Quantum Terminal GUI (T6 终端界面)
+gtswn.gui.quantum.title=ME网络量子终端
+gtswn.gui.quantum.offline=§c网络离线（锚点不可达）
+gtswn.gui.quantum.network_details=网络信息
+gtswn.gui.quantum.channels=频道
+gtswn.gui.quantum.controller_pos=控制器坐标
+gtswn.gui.quantum.dimension=维度
+gtswn.gui.quantum.node_count=量子节点
+
+# WAILA 量子节点状态显示 (v1.6.4 起不显示离线原因，原因由右键聊天提示提供)
+gtswn.waila.quantum_node.online=§a设备在线
+gtswn.waila.quantum_node.offline=§c设备离线

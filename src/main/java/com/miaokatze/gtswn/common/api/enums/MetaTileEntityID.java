@@ -12,21 +12,10 @@ import com.miaokatze.gtswn.config.Config;
  */
 public enum MetaTileEntityID {
 
-    // --- 单方块测试机器 ---
-    /** EV 等级测试发电机 (Tier 4) */
-    MTETEST_EV(0),
-    /** IV 等级测试发电机 (Tier 5) */
-    MTETEST_IV(1),
-    /** LuV 等级测试发电机 (Tier 6) */
-    MTETEST_LuV(2),
-
     // --- 无线电网监控机器 ---
     /** LV 等级无线能量监视器 (Tier 1) */
+    // 2.8.4 适配：保持 14620（上游 1.6.18 起改为 0；本分支保留以兼容 0.2.x 存档）
     WIRELESS_ENERGY_MONITOR(20),
-
-    // --- 多方块测试机器 ---
-    /** HV 等级测试多方块机器 (Tier 5) */
-    MTETEST_MULTIBLOCK_HV(10),
 
     ;
 

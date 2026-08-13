@@ -1,3 +1,4 @@
+
 package com.miaokatze.gtswn.common.items;
 
 import java.util.List;
@@ -93,8 +94,6 @@ public class WirelessEnergyTap extends Item {
      * 而新代码 {@code now} 是 game tick（通常 &lt; 10^8），{@code now - lastTime} 会是巨大负数 &lt; {@code INTERVAL_TICKS}，
      * 导致 canTrigger 永远返回 false，链路终端完全失效（无法附着覆盖板、无法切换模式）。
      * 修复：检测 lastTime 是否超过 game tick 合理上限（10^10），若超过视为老数据重置为 0。
-     * <p>
-     * 2.8.4 分支说明：我们 0.2.x 的 LastUseTime 存的是毫秒时间戳，升级到本版本时同样命中此兼容分支。
      *
      * @param aStack 物品栈
      * @param world  当前世界（用于获取世界 tick）
@@ -155,6 +154,8 @@ public class WirelessEnergyTap extends Item {
     /**
      * 绑定成功后提示玩家:覆盖板绑定的是机器拥有者的电网,请确认团队已共享电网。
      * 前 MAX_BIND_NOTIFY 次显示,之后不再提示。计数写入链路终端 NBT。
+     * Notify player after successful bind: cover binds to machine owner's grid, confirm team shared grid.
+     * Shown first MAX_BIND_NOTIFY times, then suppressed. Count stored in tap NBT.
      */
     private void notifyBindOwner(ItemStack stack, EntityPlayer player) {
         ensureNBT(stack);

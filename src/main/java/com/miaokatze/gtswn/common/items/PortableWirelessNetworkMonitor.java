@@ -1,10 +1,10 @@
 package com.miaokatze.gtswn.common.items;
 
-import java.math.BigInteger;
 import java.util.List;
 import java.util.UUID;
 
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
@@ -15,7 +15,9 @@ import net.minecraft.world.World;
 
 import com.miaokatze.gtswn.common.hud.WirelessMonitorHUD;
 
-import gregtech.common.misc.WirelessNetworkManager;
+import baubles.api.BaubleType;
+import baubles.api.IBauble;
+import cpw.mods.fml.common.Optional;
 
 /**
  * 便携式无线网络监测终端
@@ -26,7 +28,8 @@ import gregtech.common.misc.WirelessNetworkManager;
  * - 已绑定状态下右击显示拥有者的无线电网能量值
  * - Shift + 右击覆盖绑定为当前玩家（无论是否已绑定）
  */
-public class PortableWirelessNetworkMonitor extends Item {
+@Optional.Interface(iface = "baubles.api.IBauble", modid = "Baubles")
+public class PortableWirelessNetworkMonitor extends Item implements IBauble {
 
     /** NBT 键名：存储拥有者的 UUID 字符串 */
     private static final String NBT_OWNER_UUID = "OwnerUUID";
@@ -53,8 +56,7 @@ public class PortableWirelessNetworkMonitor extends Item {
         setCreativeTab(CreativeTabs.tabMisc);
         // 设置最大堆叠数量为 1（便携式设备通常不可堆叠）
         setMaxStackSize(1);
-        // 允许显示 tooltip
-        setHasSubtypes(true);
+        // v1.2.1 移除 setHasSubtypes(true)：本物品无子类型（damage 仅用于材质切换，不需要 NBT 子类型分支）
     }
 
     /**
@@ -182,64 +184,47 @@ public class PortableWirelessNetworkMonitor extends Item {
         }
     }
 
-    /**
-     * 显示拥有者的无线电网能量值（仅在已绑定状态下调用）
-     */
-    private void displayWirelessEnergy(ItemStack aStack, EntityPlayer aPlayer) {
-        // 读取拥有者 UUID（此时必定存在）
-        UUID ownerUUID;
-        try {
-            String uuidString = aStack.stackTagCompound.getString(NBT_OWNER_UUID);
-            ownerUUID = UUID.fromString(uuidString);
-        } catch (Exception e) {
-            // 理论上不会到达这里，因为 isBound() 已检查
-            aPlayer.addChatMessage(new ChatComponentText("§c[便携监测终端] 数据异常！请 Shift + 右击重新绑定。"));
-            return;
-        }
+    // ========== Baubles 饰品接口实现 ==========
 
-        // 调用 GT5U 的 WirelessNetworkManager 获取无线电网能量
-        BigInteger wirelessEU = WirelessNetworkManager.getUserEU(ownerUUID);
-
-        // 格式化能量值（使用标准数字格式）
-        String euFormatted = formatBigInteger(wirelessEU);
-
-        // 发送聊天消息
-        String energyMsg = StatCollector.translateToLocalFormatted("gtswn.chat.monitor.energy", euFormatted);
-        aPlayer.addChatMessage(new ChatComponentText(energyMsg));
-
-        // 额外提示：如何更新拥有者
-        String hintMsg = StatCollector.translateToLocal("gtswn.chat.monitor.rebind.hint");
-        aPlayer.addChatMessage(new ChatComponentText(hintMsg));
+    /** 饰品槽位类型：UNIVERSAL（可放入任意饰品槽） */
+    @Override
+    @Optional.Method(modid = "Baubles")
+    public BaubleType getBaubleType(ItemStack itemstack) {
+        return BaubleType.UNIVERSAL;
     }
 
-    /**
-     * 格式化 BigInteger 为易读字符串
-     * 对于超大数值使用逗号分隔
-     */
-    private String formatBigInteger(BigInteger value) {
-        if (value == null) {
-            return "0";
-        }
-
-        // 如果数值较小，直接显示
-        if (value.compareTo(BigInteger.valueOf(1_000_000L)) < 0) {
-            return value.toString();
-        }
-
-        // 对于大数值，使用逗号分隔
-        String str = value.toString();
-        StringBuilder result = new StringBuilder();
-        int length = str.length();
-
-        for (int i = 0; i < length; i++) {
-            if (i > 0 && (length - i) % 3 == 0) {
-                result.append(",");
-            }
-            result.append(str.charAt(i));
-        }
-
-        return result.toString();
+    /** 装备时每 tick 调用，HUD 由 C→S→C 包驱动故空实现 */
+    @Override
+    @Optional.Method(modid = "Baubles")
+    public void onWornTick(ItemStack itemstack, EntityLivingBase player) {
+        // 空实现：HUD 数据由客户端 PacketRequestWirelessEU 驱动
     }
+
+    @Override
+    @Optional.Method(modid = "Baubles")
+    public void onEquipped(ItemStack itemstack, EntityLivingBase player) {
+        // 无需特殊处理
+    }
+
+    @Override
+    @Optional.Method(modid = "Baubles")
+    public void onUnequipped(ItemStack itemstack, EntityLivingBase player) {
+        // 无需特殊处理
+    }
+
+    @Override
+    @Optional.Method(modid = "Baubles")
+    public boolean canEquip(ItemStack itemstack, EntityLivingBase player) {
+        return true;
+    }
+
+    @Override
+    @Optional.Method(modid = "Baubles")
+    public boolean canUnequip(ItemStack itemstack, EntityLivingBase player) {
+        return true;
+    }
+
+    // formatBigInteger 已迁移至 FormatUtil（T4 公共工具类提取）
 
     /**
      * 添加物品的额外信息（Tooltip）
@@ -282,9 +267,16 @@ public class PortableWirelessNetworkMonitor extends Item {
             }
         }
 
+        // 机制说明（3 行简略形式，v1.3.0 新增）
+        aList.add(StatCollector.translateToLocal("gtswn.tooltip.monitor.mechanism.line1"));
+        aList.add(StatCollector.translateToLocal("gtswn.tooltip.monitor.mechanism.line2"));
+        aList.add(StatCollector.translateToLocal("gtswn.tooltip.monitor.mechanism.line3"));
+
         // 添加空行
         aList.add("");
         // 操作提示
         aList.add(StatCollector.translateToLocal("gtswn.tooltip.monitor.usage"));
+        // Baubles 饰品栏装备提示（Baubles 为可选依赖，文案中保留原名便于玩家识别）
+        aList.add(StatCollector.translateToLocal("gtswn.tooltip.monitor.baubles.equip"));
     }
 }

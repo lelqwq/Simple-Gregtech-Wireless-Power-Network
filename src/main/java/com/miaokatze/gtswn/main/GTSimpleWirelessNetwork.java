@@ -11,6 +11,7 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLLoadCompleteEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
+import cpw.mods.fml.common.event.FMLServerStartedEvent;
 import cpw.mods.fml.common.event.FMLServerStartingEvent;
 
 /**
@@ -22,11 +23,20 @@ import cpw.mods.fml.common.event.FMLServerStartingEvent;
     version = Tags.VERSION,
     name = "GTSimpleWirelessNetwork",
     acceptedMinecraftVersions = "[1.7.10]",
-    dependencies = "required-after:gregtech;")
+    // required-before:gregtech 确保 GTSWN 的 preInit 在 GT preInit 之前执行
+    // 这是 sAfterGTPreload 方案的前置条件：本 mod 需在 GT PreInit 末尾遍历 sAfterGTPreload 队列之前完成 Runnable 添加
+    // 参考 GigaGramFab.java 行 45 的 required-before:gregtech 模式
+    dependencies = "required-before:gregtech;required-after:appliedenergistics2;")
 public class GTSimpleWirelessNetwork {
 
     // 模组唯一标识符 (Mod ID)
     public static final String MODID = "gtswn";
+    public static final int GUI_NETWORK_INFO_PANEL = 1;
+    /** ME 网络量子终端 GUI ID（规划 §4；GUI handler 的 case 在 T6 实现） */
+    public static final int GUI_QUANTUM_TERMINAL = 2;
+
+    @Mod.Instance(MODID)
+    public static GTSimpleWirelessNetwork instance;
 
     // 日志记录器，用于输出模组运行信息
     public static final Logger LOG = LogManager.getLogger(MODID);
@@ -71,6 +81,22 @@ public class GTSimpleWirelessNetwork {
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
         proxy.serverStarting(event);
+    }
+
+    /**
+     * 服务器已启动阶段（v1.5.15 新增）。
+     * <p>
+     * 所有世界已加载，用于触发网络信息屏历史数据的过期清理。
+     */
+    @Mod.EventHandler
+    public void serverStarted(FMLServerStartedEvent event) {
+        if (proxy != null) {
+            try {
+                proxy.serverStarted(event);
+            } catch (Throwable t) {
+                LOG.error("在 serverStarted 阶段调用代理类时发生错误", t);
+            }
+        }
     }
 
     /**

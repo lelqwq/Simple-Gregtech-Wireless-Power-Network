@@ -11,11 +11,15 @@ import cpw.mods.fml.relauncher.Side;
  * GlobalEnergy 数据仅存在于服务端，客户端直接调用 {@code WirelessNetworkManager.getUserEU} 恒返 0，
  * 故改为客户端周期性发请求包、服务端查询后回响应包的 C→S→C 模式。
  * <p>
- * discriminator 分配约定（与上游 1.6.18 编号对齐，勿随意调整已占用编号以免协议失配）：
+ * discriminator 分配约定：
  * <ul>
  * <li>0 = {@link PacketRequestWirelessEU}（C→S 请求 EU）</li>
  * <li>1 = {@link PacketResponseWirelessEU}（S→C 响应 EU）</li>
- * <li>2-6 = 预留（随 P2/P3 移植）：信息面板配置 / AE 标签页 / AE 监控数据 / 量子终端请求 / 量子终端数据</li>
+ * <li>2 = {@link PacketUpdateNetworkInfoPanelConfig}（C→S 信息屏配置）</li>
+ * <li>3 = {@link PacketUpdateAETabState}（C→S AE 标签页+监视列表）</li>
+ * <li>4 = {@link PacketSyncAEMonitorData}（S→C AE 监控数据同步）</li>
+ * <li>5 = {@link PacketRequestQuantumTerminalData}（C→S 请求量子终端数据）</li>
+ * <li>6 = {@link PacketSyncQuantumTerminalData}（S→C 量子终端数据同步）</li>
  * </ul>
  */
 public class GTSWNPacketHandler {
@@ -26,14 +30,33 @@ public class GTSWNPacketHandler {
     /**
      * 注册所有网络包。需在 {@code CommonProxy.preInit} 阶段调用一次。
      * <p>
-     * 注册顺序即 discriminator 编号。
+     * 注册顺序即 discriminator 编号，勿随意调整已占用编号以免协议失配。
      */
     public static void register() {
         // 0: 客户端→服务端 请求 EU
         NETWORK.registerMessage(PacketRequestWirelessEU.Handler.class, PacketRequestWirelessEU.class, 0, Side.SERVER);
         // 1: 服务端→客户端 响应 EU
         NETWORK.registerMessage(PacketResponseWirelessEU.Handler.class, PacketResponseWirelessEU.class, 1, Side.CLIENT);
-        // 2-6 预留（上游编号）：PacketUpdateNetworkInfoPanelConfig / PacketUpdateAETabState /
-        // PacketSyncAEMonitorData / PacketRequestQuantumTerminalData / PacketSyncQuantumTerminalData
+        NETWORK.registerMessage(
+            PacketUpdateNetworkInfoPanelConfig.Handler.class,
+            PacketUpdateNetworkInfoPanelConfig.class,
+            2,
+            Side.SERVER);
+        // 3: 客户端→服务端 AE 标签页切换+监视列表操作
+        NETWORK.registerMessage(PacketUpdateAETabState.Handler.class, PacketUpdateAETabState.class, 3, Side.SERVER);
+        // 4: 服务端→客户端 AE 监控数据同步
+        NETWORK.registerMessage(PacketSyncAEMonitorData.Handler.class, PacketSyncAEMonitorData.class, 4, Side.CLIENT);
+        // 5: 客户端→服务端 请求量子终端数据（无字段，服务端取玩家手持校验）
+        NETWORK.registerMessage(
+            PacketRequestQuantumTerminalData.Handler.class,
+            PacketRequestQuantumTerminalData.class,
+            5,
+            Side.SERVER);
+        // 6: 服务端→客户端 量子终端数据同步
+        NETWORK.registerMessage(
+            PacketSyncQuantumTerminalData.Handler.class,
+            PacketSyncQuantumTerminalData.class,
+            6,
+            Side.CLIENT);
     }
 }

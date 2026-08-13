@@ -1,53 +1,35 @@
-tile.gtswn.mtetest.ev.name=MTETest EV
-tile.gtswn.mtetest.iv.name=MTETest IV
-tile.gtswn.mtetest.luv.name=MTETest LuV
-
-# existing keys
-tile.gtswn.mtetest.name=MTETest Machine
-gtswn.tooltip.mtetest.info=Generates energy like a solar generator during daytime when sky is visible.
-
-# MTETest tier names (updated to gtswn prefix)
-gtswn.machine.test.ev=Test Machine EV
-gtswn.machine.test.iv=Test Machine IV
-gtswn.machine.test.luv=Test Machine (LuV)
-gtswn.machine.multitest.hv=Test Multiblock Machine (HV)
-
-# GregTech style keys used by CommonMetaTileEntity
-gt.blockmachines.gtswn.mtetest.ev.name=MTETest EV
-gt.blockmachines.gtswn.mtetest.iv.name=MTETest IV
-gt.blockmachines.gtswn.mtetest.luv.name=MTETest LuV
-gt.blockmachines.gtswn.multitest.hv.name=Test Multiblock Machine (HV)
-gtswn.recipe.multitest=Test Multiblock Machine
-
 # Items
-item.TestCoin_GTswn.name=Test Coin
-item.TestCoin_GTswn_E.name=Electronic Test Coin
 item.PortableWirelessNetworkMonitor_GTswn.name=Portable Wireless Network Monitor
+item.TestCoin_GTswn.name=Test Coin
+item.MENetworkQuantumTerminal_GTswn.name=ME Network Quantum Terminal
 
 # Machines
 gtswn.machine.wireless_monitor=Wireless Energy Monitor
 gt.blockmachines.gtswn.wireless_energy_monitor.name=Wireless Energy Monitor
 
 # Wireless Energy Monitor Description
-gtswn.desc.wireless_monitor.line1=§bMonitor wireless network, smart power calculation
-gtswn.desc.wireless_monitor.line2=§bSmart redstone output, multiple modes
-gtswn.desc.wireless_monitor.line3=§9From MOD: GTSimpleWirelessNetwork
+gtswn.desc.wireless_monitor.line1=§bMonitor wireless network, §asmart power calculation
+gtswn.desc.wireless_monitor.line2=§bSmart redstone output, §emultiple modes
+gtswn.desc.wireless_monitor.line3=§9From MOD: §fGTSimpleWirelessNetwork
+gtswn.desc.wireless_monitor.line4=§eRecommend keeping the machine's chunk §cloaded
+gtswn.desc.wireless_monitor.line5=§bReload: §fShort(≤§e10s§f)§aauto-resumes§f, Long(>§e10s§f)§6enables 30s redstone buffer
+gtswn.desc.wireless_monitor.line6=§bStatus: §fevery §e5s§f, §a300s§f window avg, with §7silent§f/§8long-term-silent§f(≥§a300s§f) detection
+gtswn.desc.wireless_monitor.line7=§bCold Start: §fReload/rejoin triggers, §edataset<61 means cold-start calculation
 
 # Wireless Energy Monitor UI
 gtswn.ui.title=Wireless Energy Monitor
 gtswn.ui.mode.normal=§bMode: §fNormal
-gtswn.ui.mode.scientific=§eMode: §fScientific
+gtswn.ui.mode.scientific=§bMode: §fScientific
+gtswn.ui.mode.metric=§bMode: §fMetric
 gtswn.ui.wireless.energy=§bWireless Network: §f%s §bEU
 gtswn.ui.wireless.energy.scientific=§bWireless Network: §f%s §bEU
-gtswn.ui.network.status.up=§bNetwork Status: §a↑ +%s §bEU/t (§f%s§b)
-gtswn.ui.network.status.down=§bNetwork Status: §c↓ -%s §bEU/t (§f%s§b)
-gtswn.ui.network.status.nochange=§bNetwork Status: §fNo Change/Calculating
 gtswn.ui.redstone.mode=§bRedstone Mode: §f%s
 gtswn.ui.redstone.mode.off=Off
 gtswn.ui.redstone.mode.high=High Level
 gtswn.ui.redstone.mode.low=Low Level
 gtswn.ui.redstone.mode.high.lag=High Level (Hysteresis)
 gtswn.ui.redstone.mode.low.lag=Low Level (Hysteresis)
+gtswn.ui.redstone.mode.unknown=Unknown
 gtswn.ui.redstone.output.on=§bRedstone Output: §aON
 gtswn.ui.redstone.output.off=§bRedstone Output: §cOFF
 gtswn.ui.redstone.desc.off=§fOff: §eNo redstone signal output
@@ -55,25 +37,24 @@ gtswn.ui.redstone.desc.high=§fHigh Level: §eOutput when energy > Param1
 gtswn.ui.redstone.desc.low=§fLow Level: §eOutput when energy < Param1
 gtswn.ui.redstone.desc.high.lag=§fHigh (Hysteresis): §eOutput >Param1, Cancel <Param2
 gtswn.ui.redstone.desc.low.lag=§fLow (Hysteresis): §eCancel >Param1, Output <Param2
+gtswn.ui.redstone.desc.unknown=§fUnknown Mode
 gtswn.ui.param1=§bParam1: §f%s
 gtswn.ui.param2=§bParam2: §f%s
 gtswn.ui.tooltip.toggle.mode=Toggle counting mode
 gtswn.ui.tooltip.toggle.redstone=Toggle redstone mode
+gtswn.ui.tooltip.toggle.anchor=Toggle anchor parameter (Energy/Status)
 gtswn.ui.tooltip.param1.minus=Param1 -Highest digit
 gtswn.ui.tooltip.param1.plus=Param1 +Highest digit
 gtswn.ui.tooltip.param1.mul10=Param1 ×10
 gtswn.ui.tooltip.param1.div10=Param1 ÷10
-gtswn.ui.tooltip.param1.reset=Param1 Reset
 gtswn.ui.tooltip.param2.minus=Param2 -Highest digit
 gtswn.ui.tooltip.param2.plus=Param2 +Highest digit
 gtswn.ui.tooltip.param2.mul10=Param2 ×10
 gtswn.ui.tooltip.param2.div10=Param2 ÷10
-gtswn.ui.tooltip.param2.reset=Param2 Reset
 
 # HUD Text
-gtswn.hud.network.status=Average Grid Status
+# HUD reload transition placeholder text (before first sync received)
 gtswn.hud.network.status.calculating=Calculating...
-gtswn.hud.network.realtime_status=Realtime Grid Status
 gtswn.hud.wireless.network=Wireless Network
 gtswn.hud.eu.unit=EU
 gtswn.hud.eut.unit=EU/t
@@ -82,7 +63,15 @@ gtswn.hud.eut.unit=EU/t
 gtswn.tooltip.monitor.hud.mode.off=§cHUD: Off
 gtswn.tooltip.monitor.hud.mode.normal=§bHUD: Normal
 gtswn.tooltip.monitor.hud.mode.scientific=§eHUD: Scientific
-gtswn.tooltip.monitor.usage=§7Right-click to toggle HUD mode
+gtswn.tooltip.monitor.usage=§eRight-click§f to toggle HUD mode
+gtswn.tooltip.monitor.baubles.equip=§fCan be equipped in any §bBaubles slot§f
+# Portable mechanism description (v1.3.0, 3-line brief form)
+gtswn.tooltip.monitor.mechanism.line1=§bStatus: §fevery §e5s§f, §a300s§f window average
+gtswn.tooltip.monitor.mechanism.line2=§bSilent: §fwith §7silent§f/§8long-term-silent§f(≥§a300s§f) detection
+gtswn.tooltip.monitor.mechanism.line3=§bCold Start: §fRejoin triggers, §edataset resets on logout
+
+# NC2 Industrial Information Panel Info (via GT Sensor Kit)
+gtswn.info.energy=§7Energy: %s
 
 # Chat Messages
 gtswn.chat.monitor.bound=§a[Portable Monitor] Bound to owner: %s
@@ -96,17 +85,8 @@ gtswn.chat.monitor.mode.scientific=§eScientific
 # Wireless Energy Tap
 item.wirelessEnergyTap.name=Wireless Network Link Terminal
 item.wirelessEnergyTap.desc=Connect energy containers to GT wireless network
-tooltip.wireless_energy_tap.tier=Voltage Tier: %s
-tooltip.wireless_energy_tap.mode=Current Mode: %s
-tooltip.wireless_energy_tap.mode.input=Energy Link (Input)
-tooltip.wireless_energy_tap.mode.output=Power Link (Output)
 gtswn.tooltip.tap.mode.input=Current Mode: Energy Link (Input)
 gtswn.tooltip.tap.mode.output=Current Mode: Power Link (Output)
-chat.wireless_energy_tap.no_container=Not an energy container
-chat.wireless_energy_tap.no_capacity=No EU capacity, cannot connect
-chat.wireless_energy_tap.no_voltage=No voltage tier detected, cannot connect
-chat.wireless_energy_tap.default_amperage=No amperage detected, defaulting to 2A
-chat.wireless_energy_tap.success=Connection successful!
 gtswn.chat.tap.mode.input=§a[Link Terminal] Switched to Energy Link mode
 gtswn.chat.tap.mode.output=§a[Link Terminal] Switched to Power Link mode
 gtswn.chat.tap.not_energy_container=§c[Link Terminal] Not an energy container
@@ -123,7 +103,7 @@ gtswn.chat.tap.cover_item=§7 Cover:
 gtswn.chat.tap.machine_detected=§a[Link Terminal] Machine detected:
 gtswn.chat.tap.capacity=§7 Capacity: 
 gtswn.chat.tap.voltage=§7 Voltage: 
-gtswn.chat.tap.amperage=§7 Amperage:
+gtswn.chat.tap.amperage=§7 Amperage: 
 gtswn.chat.tap.cannot_place_cover=§c[Link Terminal] Cannot place cover on this side!
 gtswn.chat.tap.cover_exists=§c[Link Terminal] A cover already exists on this side! Remove it first.
 gtswn.chat.tap.attaching=§e[Link Terminal] Attaching 
@@ -133,8 +113,8 @@ gtswn.chat.tap.attaching_suffix=§e mode cover...
 gtswn.chat.tap.link_success=§a[Link Terminal] Linked successfully!
 gtswn.chat.tap.mode_text=§7 Mode: 
 gtswn.chat.tap.voltage_tier=§7 Voltage tier: 
-gtswn.chat.tap.amperage_tier=§7 Amperage tier:
-gtswn.chat.tap.cover_capacity=§b Cover capacity:
+gtswn.chat.tap.amperage_tier=§7 Amperage tier: 
+gtswn.chat.tap.cover_capacity=§b Cover capacity: 
 gtswn.chat.tap.cannot_get_cover=§c[Link Terminal] Cannot get cover item!
 gtswn.chat.tap.no_cover_support=§c[Link Terminal] Machine doesn't support covers
 gtswn.chat.tap.bind_notify=§e[Link Terminal] Bound to the machine owner's power grid. Please confirm your team has shared the grid (this message will appear %d more times).
@@ -142,16 +122,197 @@ gtswn.chat.tap.bind_notify=§e[Link Terminal] Bound to the machine owner's power
 # Wireless Cover Right-Click Config
 gtswn.chat.cover.energy_config=GTswn Link Terminal (Energy) Config:
 gtswn.chat.cover.dynamo_config=GTswn Link Terminal (Power) Config:
-gtswn.chat.cover.voltage_tier=Voltage tier:
-gtswn.chat.cover.amperage_tier=Amperage tier:
-gtswn.chat.cover.capacity=Capacity:
-gtswn.chat.cover.stored_eu=Stored:
-gtswn.chat.cover.next_refill=§7 Next refill in:
-gtswn.chat.cover.next_upload=§7 Next upload in:
+gtswn.chat.cover.voltage_tier=Voltage tier: 
+gtswn.chat.cover.amperage_tier=Amperage tier: 
+gtswn.chat.cover.capacity=Capacity: 
+gtswn.chat.cover.stored_eu=Stored: 
 gtswn.chat.cover.not_configured=Not configured yet!
-gtswn.command.join.usage=Usage: /gtswn global_energy_join <memberUUID> <leaderUUID>
-gtswn.command.join.same_uuid=§eMember UUID is the same as leader UUID, no action needed
-gtswn.command.join.cycle_detect=§cCycle detected: %s is %s's leader, cannot join %s to %s's network
-gtswn.command.join.cascade_warn=§eNote: %s's leader is %s, %s will join %s's network
+
+# GTSWN Command - global_energy_join
 gtswn.command.join.success=§aJoin successful: %s has joined %s's wireless network
+gtswn.command.join.same_uuid=§eMember UUID is the same as leader UUID, no action needed
+gtswn.command.join.cascade_warn=§eNote: %s's leader is %s, %s will join %s's network
+gtswn.command.join.cycle_detect=§cCycle detected: %s is %s's leader, cannot join %s to %s's network
 gtswn.command.join.network_eu=§bTarget network total: %s EU
+gtswn.command.join.usage=Usage: /gtswn global_energy_join <memberUUID> <leaderUUID>
+
+# Cover Timer
+gtswn.chat.cover.next_refill=§7 Next refill in: 
+gtswn.chat.cover.next_upload=§7 Next upload in: 
+
+# Network Info Panel
+tile.NetworkInfoPanel_GTswn.name=Network Info Panel
+tile.NetworkInfoPanelExtender_GTswn.name=Network Info Extender Panel
+tile.NetworkQuantumNode_GTswn.name=ME Network Quantum Node
+gtswn.network_info.owner=Owner: %s
+gtswn.network_info.energy=Energy: %s EU
+gtswn.network_info.unknown=Unknown
+gtswn.network_info.status.cold=Cold starting...
+gtswn.network_info.status.silent=0 EU/t (Silent)
+gtswn.network_info.status.longtermsilent=0 EU/t (Long Silent)
+gtswn.network_info.status.lessthan1=0 EU/t (<1EU)
+gtswn.network_info.status.up=+%s EU/t (%s)
+gtswn.network_info.status.down=-%s EU/t (%s)
+gtswn.network_info.gui.title=Network Info Panel
+gtswn.network_info.gui.brief.eu=Brief EU
+gtswn.network_info.gui.chart.eu=Chart EU
+gtswn.network_info.gui.window=Window
+gtswn.network_info.gui.on=ON
+gtswn.network_info.gui.off=OFF
+# Panel display mode buttons (target 3)
+gtswn.network_info.gui.mode.normal=Normal
+gtswn.network_info.gui.mode.scientific=Scientific
+gtswn.network_info.gui.mode.metric=Metric
+gtswn.network_info.screen.title=Wireless EU Network
+gtswn.network_info.screen.energy=Grid Capacity: %s
+gtswn.network_info.screen.history=History %s
+gtswn.network_info.screen.collecting=Collecting... %d/2
+gtswn.network_info.gui.apply=Apply
+gtswn.network_info.gui.chart_settings=Chart style
+gtswn.network_info.gui.energy_y_min=EU Y min
+gtswn.network_info.gui.energy_y_max=EU Y max
+gtswn.network_info.gui.eut_y_min=EU/t Y min
+gtswn.network_info.gui.eut_y_max=EU/t Y max
+gtswn.network_info.gui.border_width=Border
+gtswn.network_info.gui.line_width=Line
+gtswn.network_info.gui.smoothing=Spline Density
+gtswn.network_info.gui.chart_bg=Chart BG
+gtswn.network_info.gui.screen_bg=Screen BG
+gtswn.network_info.gui.blank_auto=blank = auto/none
+gtswn.network_info.screen.now=Now
+gtswn.network_info.screen.time_axis=Time
+gtswn.network_info.screen.energy_axis=Grid Capacity (EU)
+
+# v1.5.4 AE TESR screen labels
+gtswn.network_info.screen.ae_chart_empty=Not bound
+gtswn.network_info.screen.ae_monitor_empty=No monitored items
+gtswn.network_info.screen.collecting_value=Collecting...
+gtswn.network_info.screen.ae_chart_current=Current: %s
+gtswn.network_info.screen.ae_chart_rate=Realtime Rate: %s/min
+gtswn.network_info.screen.ae_chart_avg_rate=Average Rate: %s/min
+gtswn.network_info.screen.ae_chart_hint=Right-click with item to bind
+gtswn.network_info.screen.ae_monitor_title=AE Network Monitor
+gtswn.network_info.screen.ae_online=Online
+gtswn.network_info.screen.ae_offline=Offline
+gtswn.network_info.screen.ae_offline_overlay=AE Network Offline
+gtswn.network_info.screen.ae_axis=AE Amount
+gtswn.network_info.screen.ae_rate_axis=AE Rate
+gtswn.network_info.screen.ae_chart_no_line=No trend line selected
+gtswn.network_info.screen.ae_monitor_header_name=Name
+gtswn.network_info.screen.ae_monitor_header_amount=Amount
+gtswn.network_info.screen.ae_monitor_header_rate=Realtime Rate
+gtswn.network_info.screen.ae_monitor_header_avg=Average Rate
+gtswn.network_info.screen.ae_monitor_too_small=Panel too small
+gtswn.network_info.screen.ae_monitor_grid_truncated=...
+
+# 1.4.4 status wording and realtime EU/t
+# Silent/<1EU/Reloading/LongTermSilent special status display (from MTEWirelessEnergyMonitor / WirelessMonitorHUD boundary handling)
+gtswn.ui.network.status.up=§bAverage Grid Status: §a+%s §bEU/t (§f%s§b)
+gtswn.ui.network.status.down=§bAverage Grid Status: §c-%s §bEU/t (§f%s§b)
+gtswn.ui.network.status.nochange=§bAverage Grid Status: §fNo Change/Calculating
+gtswn.ui.network.status.silent=§bAverage Grid Status: §f0 §bEU/t (§7Silent§b)
+gtswn.ui.network.status.longtermsilent=§bAverage Grid Status: §f0 §bEU/t (§8Long-Term Silent§b)
+gtswn.ui.network.status.lessthan1=§bAverage Grid Status: §f0 §bEU/t (§7<1EU§b)
+gtswn.ui.network.status.reload=§bAverage Grid Status: §cReload Calculating - Redstone Logic Maintained
+gtswn.ui.network.realtime_status.up=§bRealtime Grid Status: §a+%s §bEU/t (§f%s§b)
+gtswn.ui.network.realtime_status.down=§bRealtime Grid Status: §c-%s §bEU/t (§f%s§b)
+gtswn.ui.network.realtime_status.nochange=§bRealtime Grid Status: §fNo Change/Calculating
+gtswn.ui.network.realtime_status.silent=§bRealtime Grid Status: §f0 §bEU/t (§7Silent§b)
+gtswn.ui.network.realtime_status.lessthan1=§bRealtime Grid Status: §f0 §bEU/t (§7<1EU§b)
+gtswn.ui.network.realtime_status.reload=§bRealtime Grid Status: §cReload Calculating
+gtswn.hud.network.status=Average Grid Status
+gtswn.hud.network.realtime_status=Realtime Grid Status
+gtswn.info.average_status=§7Average Status: %s
+gtswn.info.realtime_status=§7Realtime Status: %s
+gtswn.network_info.status=Realtime Status: %s
+gtswn.network_info.screen.status=Realtime Grid Status: %s
+gtswn.network_info.gui.brief_ratio=Brief font: %d%%
+gtswn.network_info.gui.brief.status=Brief Realtime
+gtswn.network_info.gui.chart.eut=Chart Realtime EU/t
+gtswn.network_info.screen.eut_axis=Realtime Grid Status (EU/t)
+
+# v1.5.1 AE Tab Pages
+gtswn.network_info.gui.tab.eu=Wireless EU
+gtswn.network_info.gui.tab.ae_chart=AE Trend
+gtswn.network_info.gui.tab.ae_monitor=AE Monitor
+gtswn.network_info.gui.ae.chart.empty=Not bound
+gtswn.network_info.gui.ae.rightclick_hint=Right-click block with item to configure
+gtswn.network_info.gui.ae.monitor.empty=No monitored items
+gtswn.network_info.gui.ae.monitor.header_icon=Icon
+gtswn.network_info.gui.ae.monitor.header_name=Name
+gtswn.network_info.gui.ae.monitor.header_amount=Amount
+# v1.5.4 AE config UI new keys
+gtswn.network_info.gui.ae.chart_settings=Chart Style
+gtswn.network_info.gui.ae.window=AE Window
+gtswn.network_info.gui.ae.window.5min=5 min
+gtswn.network_info.gui.ae.window.1h=1 h
+gtswn.network_info.gui.ae.window.8h=8 h
+gtswn.network_info.gui.ae.window.24h=24 h
+gtswn.network_info.gui.ae.window.7d=7 d
+gtswn.network_info.gui.ae.window.1M=1 M
+gtswn.network_info.gui.ae.window.3M=3 M
+gtswn.network_info.gui.ae.window.1Y=1 Y
+gtswn.network_info.gui.ae.remove=Remove
+gtswn.network_info.gui.ae.clear_all=Clear All
+# v1.5.5 AE chart buttons and monitor list new keys
+gtswn.network_info.gui.ae.brief=Brief AE
+gtswn.network_info.gui.ae.chart.amount=Chart Amount
+gtswn.network_info.gui.ae.chart.rate=Chart Rate
+gtswn.network_info.gui.ae.monitor.brief=AE Status: %s | Monitored: %d
+gtswn.network_info.gui.ae.monitor.header_remove=Remove
+gtswn.network_info.chat.bind_item=Bound chart item: %s
+gtswn.network_info.chat.bind_fluid=Bound chart fluid: %s
+gtswn.network_info.chat.add_item=Added monitor: %s
+gtswn.network_info.chat.remove_item=Removed monitor: %s
+gtswn.network_info.chat.add_fluid=Added fluid monitor: %s
+gtswn.network_info.chat.remove_fluid=Removed fluid monitor: %s
+gtswn.network_info.chat.clear=Cleared chart binding
+# v1.5.8 AE monitor UI fix
+gtswn.network_info.gui.ae.line_color=AE Line Color
+gtswn.network_info.gui.ae.monitor.font_size=Font
+gtswn.network_info.gui.ae.monitor.bold=Bold
+gtswn.network_info.gui.ae.monitor.render_mode.list=List
+gtswn.network_info.gui.ae.monitor.render_mode.grid=Grid
+gtswn.network_info.gui.ae.monitor.icon_size=Icon
+gtswn.network_info.gui.ae.monitor.header_realtime=Realtime
+gtswn.network_info.gui.ae.monitor.header_average=Average
+
+# ME Network Quantum Terminal (T2 event interception / T3 terminal gestures)
+gtswn.tooltip.quantum_terminal.unbound=§7Unbound — right-click an active ME Controller to quantize & bind
+gtswn.tooltip.quantum_terminal.bound=§bBound: §f%s [%d, %d, %d]
+gtswn.tooltip.quantum_terminal.power_requirement=§eRequires the ME network to be powered (connect an Energy Cell before quantizing the controller)
+gtswn.tooltip.quantum_terminal.usage.controller=§7RClick Controller: §fQuantize & bind (rebind if quantized)
+gtswn.tooltip.quantum_terminal.usage.dequantize=§7Shift+RClick Controller: §fDequantize & unbind
+gtswn.tooltip.quantum_terminal.usage.place=§7RClick Block: §fPlace Quantum Node
+gtswn.tooltip.quantum_terminal.usage.pickup=§7Shift+Right-click quantum node: §fDestroy node (no drops)
+gtswn.tooltip.quantum_terminal.usage.gui=§7Shift+RClick Air: §fOpen terminal GUI
+gtswn.chat.quantum.quantized=§a[Quantum Terminal] Controller structure quantized (%d blocks), total channels: %d
+gtswn.chat.quantum.quantized_infinite=§a[Quantum Terminal] Controller structure quantized (%d blocks), channels: infinite
+gtswn.chat.quantum.bound=§b[Quantum Terminal] Bound to network [%d, %d, %d]
+gtswn.chat.quantum.dequantized=§e[Quantum Terminal] De-quantized
+gtswn.chat.quantum.not_active=§c[Quantum Terminal] Target is not an active ME Controller
+gtswn.chat.quantum.no_permission=§c[Quantum Terminal] No permission for this network
+gtswn.chat.quantum.need_bind=§c[Quantum Terminal] Bind a quantized controller first
+gtswn.chat.quantum.node_placed=§a[Quantum Terminal] Quantum node linked
+gtswn.chat.quantum.node_offline=§c[Quantum Node] Anchor unreachable, node offline
+gtswn.chat.quantum.node_online=§a[Quantum Node] Node online, bridged to anchor network (32 channel capacity)
+gtswn.chat.quantum.node_offline_not_quantized=§c[Quantum Node] Anchor controller is not quantized
+gtswn.chat.quantum.node_destroyed=§a[Quantum Node] Quantum node destroyed
+gtswn.chat.quantum.blocked=§c[Quantized] Controller is quantized; energy-only devices allowed
+gtswn.chat.quantum.merged=§a[Quantized] %d new controller block(s) auto-merged into the quantized structure
+gtswn.chat.quantum.warning_95=§e[Quantum Node] Warning: Network channel usage has reached 95%% (%d/%d), further connections will cause controller explosion!
+gtswn.chat.quantum.overload_warning=§4[Quantum Node] Warning: channel limit exceeded! The network will explode in {0}. Disconnect extra devices or nodes immediately
+gtswn.chat.quantum.overload_cancelled=§a[Quantum Node] Channel usage recovered, explosion cancelled
+
+# ME Network Quantum Terminal GUI (T6 terminal interface)
+gtswn.gui.quantum.title=ME Network Quantum Terminal
+gtswn.gui.quantum.offline=§cNetwork offline (anchor unreachable)
+gtswn.gui.quantum.network_details=Network Details
+gtswn.gui.quantum.channels=Channels
+gtswn.gui.quantum.controller_pos=Controller Pos
+gtswn.gui.quantum.dimension=Dimension
+gtswn.gui.quantum.node_count=Quantum Nodes
+
+# WAILA quantum node status (since v1.6.4 offline reason is not shown here; use right-click chat instead)
+gtswn.waila.quantum_node.online=§aDevice Online
+gtswn.waila.quantum_node.offline=§cDevice Offline

@@ -12,7 +12,7 @@ import io.netty.buffer.ByteBuf;
  * 服务端→客户端 响应包：携带玩家无线电网 EU 余额字符串。
  * <p>
  * 服务端 {@link PacketRequestWirelessEU.Handler} 查询后通过此包回传，
- * 客户端主线程接收后写入 {@link com.miaokatze.gtswn.common.hud.WirelessMonitorHUD} 缓存，供 HUD 渲染只读。
+ * 客户端主线程接收后写入 {@link WirelessMonitorHUD} 缓存，供 HUD 渲染只读缓存。
  * <p>
  * discriminator = 1（见 {@link GTSWNPacketHandler#register()}）。
  */
@@ -42,12 +42,13 @@ public class PacketResponseWirelessEU implements IMessage {
     /**
      * 客户端处理：委托给 {@link com.miaokatze.gtswn.main.CommonProxy#handleResponseEU}。
      * <p>
-     * 沿用上游 v1.5.14 hotfix 模式：不在 Handler 方法体中直接引用客户端类，
-     * 统一通过 @SidedProxy 委托，避免现代 JVM 下 registerMessage 解析方法体引用类型时
-     * 客户端类被 SideTransformer 剥离导致服务端 NoClassDefFoundError 崩服。
+     * 【hotfix v1.5.14】原实现直接调用 {@code Minecraft.getMinecraft().func_152344_a(...)}。
+     * 虽然 Minecraft 类本身无 @SideOnly 注解，当前不崩溃，但为了一致性和健壮性，
+     * 统一通过 @SidedProxy 委托，避免 Handler 类方法体引用客户端 API。
      * <p>
      * 【注意】不要在此类上加 @SideOnly(Side.CLIENT)！registerMessage 需要在双端都传入
-     * Handler 的 Class 对象，加 @SideOnly 会导致服务端 SideTransformer 剥离该类，崩服。
+     * Handler 的 Class 对象，加 @SideOnly 会导致服务端 SideTransformer 剥离该类，
+     * 抛出 NoClassDefFoundError 崩服。
      */
     public static class Handler implements IMessageHandler<PacketResponseWirelessEU, IMessage> {
 

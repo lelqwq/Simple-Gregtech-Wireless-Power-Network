@@ -1,10 +1,9 @@
+
 package com.miaokatze.gtswn.common.covers;
 
 import static gregtech.common.misc.WirelessNetworkManager.addEUToGlobalEnergyMap;
 
 import java.util.UUID;
-
-import net.minecraft.item.ItemStack;
 
 import com.miaokatze.gtswn.config.Config;
 
@@ -21,8 +20,7 @@ import gregtech.common.covers.Cover;
  * <li>公共字段：{@link #storedEU}（缓冲池 EU）、{@link #configured}（是否已配置）</li>
  * <li>公共行为：禁止红石敏感 / 复制粘贴工具 / tick rate 调整；alwaysLookConnected；每 tick 执行；有 GUI</li>
  * <li>{@link #getOwner(ICoverable)}：从机器获取拥有者 UUID（v1.2.1 修正参数类型从 Object 到 ICoverable）</li>
- * <li>{@link #onCoverRemoval()}：将缓冲池剩余 EU 发回无线电网（计算上行损耗），并置拆除态标志</li>
- * <li>{@link #asItemStack()}：拆除态返回 null（覆盖板由链路终端虚空生成，拆除不掉落实体物品，2.8.4 分支自定义）</li>
+ * <li>{@link #onCoverRemoval()}：将缓冲池剩余 EU 发回无线电网（计算上行损耗）</li>
  * </ul>
  * <p>
  * 子类需实现模式特定的 {@link #doCoverThings}、{@link #onCoverRightClick}、configure 以及
@@ -32,6 +30,9 @@ import gregtech.common.covers.Cover;
  * （Dynamo: storedEU/configured/ticksSinceLastUpload；Energy:
  * voltage/amperage/capacity/storedEU/configured/ticksSinceLastRefill），
  * 强行上提会导致字段读写顺序耦合脆弱。公共字段 storedEU/configured 通过 protected 暴露给子类直接访问。
+ * <p>
+ * Abstract base for wireless link terminal covers, extracting common fields and behavior.
+ * Subclasses implement mode-specific logic (doCoverThings, configure, NBT/packet sync).
  */
 public abstract class GTswnCoverWirelessBase extends Cover {
 
@@ -41,7 +42,7 @@ public abstract class GTswnCoverWirelessBase extends Cover {
     /** 是否已配置 / Whether the cover has been configured */
     protected boolean configured = false;
 
-    /** 拆除态标志（transient，不持久化）：置位后 asItemStack 返回 null，拆除不掉落实体物品 */
+    /** 拆除态标志（transient，不持久化）：置位后 asItemStack 返回 null，拆除不掉落实体物品（2.8.4 分支自定义） */
     private boolean removed = false;
 
     public GTswnCoverWirelessBase(CoverContext context) {
@@ -95,12 +96,12 @@ public abstract class GTswnCoverWirelessBase extends Cover {
     }
 
     /**
-     * 卸载时：将缓冲池剩余 EU 发回无线电网（计算上行损耗），并置拆除态标志。
+     * 卸载时：将缓冲池剩余 EU 发回无线电网（计算上行损耗）
      * <p>
      * 两个子类的卸载逻辑完全一致，故上提到基类。电网实际增加量 = storedEU × (1 - uplinkLossEU)。
      * <p>
-     * 2.8.4 分支追加：覆盖板由链路终端虚空生成（不消耗物品），拆除态标志使
-     * {@link #asItemStack()} 返回 null，dropCover 的 null 判断跳过实体生成，拆除不掉落物品。
+     * On removal: return remaining buffer to network (with uplink loss).
+     * Network receives storedEU × (1 - uplinkLossEU).
      */
     @Override
     public void onCoverRemoval() {
@@ -115,15 +116,17 @@ public abstract class GTswnCoverWirelessBase extends Cover {
             }
             this.storedEU = 0;
         }
+        // 2.8.4 分支自定义：覆盖板由链路终端虚空生成（不消耗物品），拆除态标志使
+        // asItemStack 返回 null，dropCover 的 null 判断跳过实体生成，拆除不掉落物品。
         this.removed = true;
     }
 
     /**
-     * 拆除态返回 null：dropCover 的 if (droppedCover != null) 跳过，不生成实体；
-     * 附着态返回原栈，链路终端检测/WAILA/界面显示不受影响。
+     * 2.8.4 分支自定义：拆除态返回 null（不掉实体物品）；附着态返回原栈，
+     * 链路终端检测/WAILA/界面显示不受影响。
      */
     @Override
-    public ItemStack asItemStack() {
+    public net.minecraft.item.ItemStack asItemStack() {
         return removed ? null : super.asItemStack();
     }
 }
