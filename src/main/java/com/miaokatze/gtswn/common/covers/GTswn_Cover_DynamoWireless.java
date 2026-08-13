@@ -5,6 +5,7 @@ import static gregtech.common.misc.WirelessNetworkManager.addEUToGlobalEnergyMap
 import java.util.UUID;
 
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTBase;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ChatComponentText;
@@ -32,6 +33,9 @@ public class GTswn_Cover_DynamoWireless extends Cover {
     private int intervalTicks = 20;
     private long singleTransferEnergy = 0L;
     private boolean configured = false;
+
+    /** 拆除态标志（transient，不持久化）：置位后 asItemStack 返回 null，拆除不掉落实体物品 */
+    private boolean removed = false;
 
     public GTswn_Cover_DynamoWireless(CoverContext context) {
         super(context, null);
@@ -165,6 +169,20 @@ public class GTswn_Cover_DynamoWireless extends Cover {
                     net.minecraft.util.StatCollector.translateToLocal("gtswn.chat.cover.not_configured")));
         }
         return true;
+    }
+
+    @Override
+    public void onCoverRemoval() {
+        // 覆盖板由链路终端虚空生成（不消耗物品），拆除时不掉落实体物品，保持对称。
+        // 将来移植缓冲池系统（P1）时，在此方法追加缓冲 EU 返还逻辑。
+        this.removed = true;
+    }
+
+    @Override
+    public ItemStack asItemStack() {
+        // 拆除态返回 null：dropCover 的 if (droppedCover != null) 跳过，不生成实体；
+        // 附着态返回原栈，链路终端检测/WAILA/界面显示不受影响。
+        return removed ? null : super.asItemStack();
     }
 
     public void configure(int voltage, int amperage, int intervalTicks, long singleTransferEnergy) {
