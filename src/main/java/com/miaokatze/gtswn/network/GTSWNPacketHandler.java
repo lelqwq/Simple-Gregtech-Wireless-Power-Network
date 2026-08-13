@@ -20,6 +20,7 @@ import cpw.mods.fml.relauncher.Side;
  * <li>4 = {@link PacketSyncAEMonitorData}（S→C AE 监控数据同步）</li>
  * <li>5 = {@link PacketRequestQuantumTerminalData}（C→S 请求量子终端数据）</li>
  * <li>6 = {@link PacketSyncQuantumTerminalData}（S→C 量子终端数据同步）</li>
+ * <li>7 = {@link PacketCloseQuantumTerminal}（C→S 量子终端 GUI 关闭通知，2.8.4 分支）</li>
  * </ul>
  */
 public class GTSWNPacketHandler {
@@ -58,5 +59,11 @@ public class GTSWNPacketHandler {
             PacketSyncQuantumTerminalData.class,
             6,
             Side.CLIENT);
+        // 7: 客户端→服务端 量子终端 GUI 关闭通知（2.8.4 分支修复：同步关闭 0 槽容器）
+        NETWORK.registerMessage(
+            PacketCloseQuantumTerminal.Handler.class,
+            PacketCloseQuantumTerminal.class,
+            7,
+            Side.SERVER);
     }
 }

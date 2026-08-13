@@ -10,6 +10,7 @@ import net.minecraft.util.StatCollector;
 import com.miaokatze.gtswn.common.items.ItemNetworkQuantumTerminal;
 import com.miaokatze.gtswn.common.quantum.QuantumNetworkData;
 import com.miaokatze.gtswn.network.GTSWNPacketHandler;
+import com.miaokatze.gtswn.network.PacketCloseQuantumTerminal;
 import com.miaokatze.gtswn.network.PacketRequestQuantumTerminalData;
 
 /**
@@ -110,6 +111,18 @@ public class GuiQuantumTerminal extends GuiScreen {
     public void onGuiClosed() {
         super.onGuiClosed();
         // v1.6.5：关闭不再清缓存（保留最近快照供下次打开即显；改绑其他控制器时由构造函数锚点匹配清空）
+        // 2.8.4 分支修复：通知服务端同步关闭 0 槽容器，防止窗口 ID 残留导致
+        // 后续点击窗口包（如背包整理）命中空 inventorySlots 越界被踢
+        GTSWNPacketHandler.NETWORK.sendToServer(new PacketCloseQuantumTerminal());
+        // 2.8.4 分支修复（0.4.2）：立即修复客户端窗口 ID 污染。
+        // 打开终端 GUI 时 S2DPacketOpenWindow 会把窗口 ID 写到客户端 openContainer（其对象
+        // 仍是背包容器），关闭后若不重置，后续背包槽位更新包（windowId=0）会被客户端比对
+        // 过滤，出现「服务端已排序、界面不刷新」的现象。服务端 closeScreen 的关闭包到达
+        // 前先本地归零，双保险。
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        if (player != null && player.openContainer != null) {
+            player.openContainer.windowId = 0;
+        }
     }
 
     @Override

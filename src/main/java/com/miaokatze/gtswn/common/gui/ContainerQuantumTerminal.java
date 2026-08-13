@@ -35,4 +35,17 @@ public class ContainerQuantumTerminal extends Container {
         ItemStack held = player.getHeldItem();
         return held != null && held.getItem() instanceof ItemNetworkQuantumTerminal;
     }
+
+    /**
+     * 2.8.4 分支修复（0.4.1）：0 槽容器对任何槽位点击安全返回 null。
+     * <p>
+     * 本容器 inventorySlots 为空（纯展示型 GUI），若客户端与服务端的容器关闭存在
+     * 时序窗口，背包整理类 mod 的 C0EPacketClickWindow 会携带背包槽位号命中空列表，
+     * 抛出 IndexOutOfBoundsException 导致玩家被踢。覆写后所有点击变为无害 no-op，
+     * 与 {@link com.miaokatze.gtswn.network.PacketCloseQuantumTerminal} 的主动同步双保险。
+     */
+    @Override
+    public ItemStack slotClick(int slotId, int clickedButton, int mode, EntityPlayer player) {
+        return null;
+    }
 }
