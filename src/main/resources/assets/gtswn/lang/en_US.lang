@@ -71,8 +71,9 @@ gtswn.ui.tooltip.param2.div10=Param2 ÷10
 gtswn.ui.tooltip.param2.reset=Param2 Reset
 
 # HUD Text
-gtswn.hud.network.status=Network Status
-gtswn.hud.network.no.change=No Change/Calculating
+gtswn.hud.network.status=Average Grid Status
+gtswn.hud.network.status.calculating=Calculating...
+gtswn.hud.network.realtime_status=Realtime Grid Status
 gtswn.hud.wireless.network=Wireless Network
 gtswn.hud.eu.unit=EU
 gtswn.hud.eut.unit=EU/t

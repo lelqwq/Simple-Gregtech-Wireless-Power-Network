@@ -68,8 +68,9 @@ gtswn.ui.tooltip.param2.div10=参数2 ÷10
 gtswn.ui.tooltip.param2.reset=参数2 清零
 
 # HUD Text
-gtswn.hud.network.status=电网状态
-gtswn.hud.network.no.change=暂无变化/计算中
+gtswn.hud.network.status=平均电网状态
+gtswn.hud.network.status.calculating=计算中...
+gtswn.hud.network.realtime_status=实时电网状态
 gtswn.hud.wireless.network=无线电网
 gtswn.hud.eu.unit=EU
 gtswn.hud.eut.unit=EU/t

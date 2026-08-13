@@ -56,6 +56,10 @@ dependencies {
     // IC2 API is required for implementing IElectricItem to support charging stations.
     compileOnlyApi("net.industrial-craft:industrialcraft-2:2.2.828-experimental:api") { transitive = false }
 
+    // Baubles-Expanded: compileOnly — 可选依赖，运行时由玩家自行安装 Baubles
+    // HUD 饰品栏扫描在 Baubles 不存在时安全降级（try/catch）
+    compileOnly("com.github.GTNewHorizons:Baubles-Expanded:2.2.6-GTNH:dev") { transitive = false }
+
     // UniMixins is automatically included by the GTNH build script because usesMixins = true in gradle.properties.
     // No need to declare it manually.
 

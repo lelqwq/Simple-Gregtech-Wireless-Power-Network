@@ -32,6 +32,24 @@ public class Config {
     // Default 0.0 = no loss; 1.0 = network receives nothing (cannot upload any EU)
     public static float uplinkLossEU = 0.0f;
 
+    // HUD 配置分类 / HUD config category
+    private static final String CATEGORY_HUD = "hud";
+
+    // HUD 水平偏移 / HUD horizontal offset
+    // 正值 = HUD 向右移动，负值 = HUD 向左移动 / positive = shift right, negative = shift left
+    // 默认 0 = 无偏移 / Default 0 = no offset
+    public static int hudXOffset = 0;
+
+    // HUD 垂直偏移 / HUD vertical offset
+    // 正值 = HUD 向上移动，负值 = HUD 向下移动 / positive = shift up, negative = shift down
+    // 默认 0 = 无偏移 / Default 0 = no offset
+    public static int hudYOffset = 0;
+
+    // HUD 缩放比例 / HUD scale ratio
+    // 1.0 = 默认大小，>1.0 放大，<1.0 缩小 / 1.0 = default size, >1.0 enlarge, <1.0 shrink
+    // 默认 1.0 / Default 1.0
+    public static float hudScale = 1.0f;
+
     /**
      * 同步配置文件
      * 从磁盘读取配置并更新静态变量，如果配置有变动则自动保存
@@ -76,6 +94,38 @@ public class Config {
             "上行损耗系数 / Uplink loss ratio\n" + "动力覆盖板向无线网络送电时，机器扣减的 EU 不变，电网实际增加量按 (1 - 此值) 倍率计算。\n"
                 + "When dynamo cover outputs EU to wireless network, machine deducts full amount; network receives (1 - this value) × EU.\n"
                 + "范围 0.0-1.0，默认 0.0 = 无损耗；1.0 = 电网净增加为 0 / Range 0.0-1.0, Default 0.0 = no loss; 1.0 = network receives nothing");
+
+        hudXOffset = configuration.getInt(
+            "HudXOffset",
+            CATEGORY_HUD,
+            hudXOffset,
+            -500,
+            500,
+            "HUD 水平偏移（像素）/ HUD horizontal offset (pixels)\n"
+                + "正值 = HUD 向右移动，负值 = HUD 向左移动 / positive = shift right, negative = shift left\n"
+                + "默认 0 = 无偏移 / Default 0 = no offset");
+
+        hudYOffset = configuration.getInt(
+            "HudYOffset",
+            CATEGORY_HUD,
+            hudYOffset,
+            -500,
+            500,
+            "HUD 垂直偏移（像素）/ HUD vertical offset (pixels)\n"
+                + "正值 = HUD 向上移动，负值 = HUD 向下移动 / positive = shift up, negative = shift down\n"
+                + "注意：屏幕坐标 Y 向下为正，此处正值语义为上移（与屏幕坐标相反），渲染时以减法反转。\n"
+                + "默认 0 = 无偏移 / Default 0 = no offset");
+
+        hudScale = configuration.getFloat(
+            "HudScale",
+            CATEGORY_HUD,
+            hudScale,
+            0.2f,
+            5.0f,
+            "HUD 缩放比例 / HUD scale ratio\n"
+                + "1.0 = 默认大小，>1.0 放大，<1.0 缩小 / 1.0 = default size, >1.0 enlarge, <1.0 shrink\n"
+                + "渲染时以 HUD 基准点为缩放原点，避免位置漂移 / Renderer uses HUD base point as scale origin to prevent drift\n"
+                + "范围 0.2-5.0，默认 1.0 / Range 0.2-5.0, Default 1.0");
 
         if (configuration.hasChanged()) {
             configuration.save();
