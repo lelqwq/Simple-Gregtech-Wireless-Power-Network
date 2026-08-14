@@ -1,23 +1,17 @@
 package com.miaokatze.gtswn.common.items;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 import net.minecraft.block.Block;
 import net.minecraft.creativetab.CreativeTabs;
 import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ChatComponentText;
-import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.StatCollector;
-import net.minecraft.util.Vec3;
 import net.minecraft.world.World;
 import net.minecraftforge.common.util.ForgeDirection;
 
@@ -70,12 +64,6 @@ public class ItemNetworkQuantumTerminal extends Item {
     private static final String NBT_ANCHOR_X = "QT_AnchorX";
     private static final String NBT_ANCHOR_Y = "QT_AnchorY";
     private static final String NBT_ANCHOR_Z = "QT_AnchorZ";
-
-    /** 射线命中方块提示冷却表（2.8.4 分支）：玩家 UUID → 上次提示的世界 tick */
-    private static final Map<UUID, Long> lastAimBlockedHintTick = new HashMap<>();
-
-    /** 射线命中方块提示冷却（tick），防连点刷屏 */
-    private static final long AIM_BLOCKED_HINT_COOLDOWN_TICKS = 40L;
 
     /** 绑定时维度显示名（tooltip 用） */
     private static final String NBT_BOUND_NAME = "QT_BoundName";
@@ -236,38 +224,17 @@ public class ItemNetworkQuantumTerminal extends Item {
         GTSimpleWirelessNetwork.LOG
             .debug("[量子终端] onItemRightClick 进入 玩家={} isRemote={}", player.getCommandSenderName(), world.isRemote);
         if (world.isRemote) {
+            // 2.8.4 分支重构（0.5.0）：GUI 改为客户端本地打开（无服务端容器、无 openGui 协议）。
+            // 判定条件：潜行 + 已绑定（isBound 读 NBT 双端一致）；准星判定在 ClientProxy 内
+            // 使用客户端本地 objectMouseOver（真·选块数据，零误差）。经 @SidedProxy 转发，
+            // 本类不引用任何客户端类（v1.5.14 类加载安全模式）。
+            if (player.isSneaking() && isBound(stack)) {
+                GTSimpleWirelessNetwork.proxy.openQuantumTerminalGui(player);
+            }
             return stack;
         }
-        if (player.isSneaking()) {
-            if (!isBound(stack)) {
-                sendMessage(player, "gtswn.chat.quantum.need_bind");
-                return stack;
-            }
-            // 2.8.4 分支修复（0.4.3）：改为纯 vanilla 复刻客户端选块射线（EntityRenderer.getMouseOver）。
-            // 原 v1.6.11 hotfix 的 AE2 Platform 射线在 872 上存在三处差异——
-            // fov 固定 1.0（客户端用当帧 partialTicks 插值）、stopOnLiquid=true（客户端 false）、
-            // getEyeOffset 被 872 标记为客户端专用——边缘瞄准时服务端误判"命中方块"，
-            // 导致 GUI 不开或误提示。getLook/getEyeHeight/getBlockReachDistance 均为服务端安全 API。
-            Vec3 eyePos = Vec3
-                .createVectorHelper(player.posX, player.posY + (double) player.getEyeHeight(), player.posZ);
-            Vec3 lookVec = player.getLook(1.0F);
-            double reach = ((EntityPlayerMP) player).theItemInWorldManager.getBlockReachDistance();
-            Vec3 end = eyePos.addVector(lookVec.xCoord * reach, lookVec.yCoord * reach, lookVec.zCoord * reach);
-            MovingObjectPosition hit = world.rayTraceBlocks(eyePos, end, false);
-            if (hit != null && hit.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
-                // 真·选中方块（控制器/节点/任意方块）→ 方块交互路径，不开 GUI；给提示避免"没反应"的困惑
-                sendAimBlockedHint(world, player);
-                return stack;
-            }
-            // 坐标参数对手持物品 GUI 无意义（T6 Container 取 player.getHeldItem()），传玩家位置占位
-            GTSimpleWirelessNetwork.LOG.debug("[量子终端] 打开量子终端 GUI 玩家={}", player.getCommandSenderName());
-            player.openGui(
-                GTSimpleWirelessNetwork.instance,
-                GTSimpleWirelessNetwork.GUI_QUANTUM_TERMINAL,
-                world,
-                (int) player.posX,
-                (int) player.posY,
-                (int) player.posZ);
+        if (player.isSneaking() && !isBound(stack)) {
+            sendMessage(player, "gtswn.chat.quantum.need_bind");
         }
         return stack;
     }
@@ -442,19 +409,6 @@ public class ItemNetworkQuantumTerminal extends Item {
     /** 服务端向玩家发送本地化聊天提示（仅服务端调用） */
     private static void sendMessage(EntityPlayer player, String key, Object... args) {
         player.addChatMessage(new ChatComponentText(StatCollector.translateToLocalFormatted(key, args)));
-    }
-
-    /**
-     * 射线命中方块导致不开终端 GUI 时的提示（2.8.4 分支，带冷却防刷屏）。
-     */
-    private static void sendAimBlockedHint(World world, EntityPlayer player) {
-        long tick = world.getTotalWorldTime();
-        Long last = lastAimBlockedHintTick.get(player.getUniqueID());
-        if (last != null && tick - last < AIM_BLOCKED_HINT_COOLDOWN_TICKS) {
-            return;
-        }
-        lastAimBlockedHintTick.put(player.getUniqueID(), tick);
-        sendMessage(player, "gtswn.chat.quantum.aim_blocked");
     }
 
     // ==================== Tooltip（§7） ====================

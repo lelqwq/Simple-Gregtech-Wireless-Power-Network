@@ -1,8 +1,15 @@
 package com.miaokatze.gtswn.main;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.ChatComponentText;
+import net.minecraft.util.MovingObjectPosition;
+import net.minecraft.util.StatCollector;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 
@@ -143,10 +150,37 @@ public class ClientProxy extends CommonProxy {
                 return new GuiNetworkInfoPanel((TileEntityNetworkInfoPanel) tile);
             }
         }
-        // ME 网络量子终端：手持物品 GUI，无 TileEntity 依赖，数据走包 5/6 轮询
-        if (id == GTSimpleWirelessNetwork.GUI_QUANTUM_TERMINAL) {
-            return new GuiQuantumTerminal();
-        }
+        // 2.8.4 分支（0.5.0）：量子终端 GUI 客户端本地打开（openQuantumTerminalGui），无 openGui 分支
         return null;
+    }
+
+    /** 射线命中方块提示冷却表（2.8.4 分支 0.5.0）：玩家 UUID → 上次提示的客户端世界 tick */
+    private static final Map<UUID, Long> lastAimBlockedHintTick = new HashMap<>();
+
+    /** 射线命中方块提示冷却（tick），防连点刷屏 */
+    private static final long AIM_BLOCKED_HINT_COOLDOWN_TICKS = 40L;
+
+    /**
+     * 打开量子终端 GUI（客户端逻辑，2.8.4 分支 0.5.0）。
+     * <p>
+     * 准星判定使用客户端本地 {@code mc.objectMouseOver}（真·选块数据，零误差）：
+     * 命中方块 = 方块手势（控制器/机器等），不开终端 GUI，仅给提示（带冷却）；
+     * 未命中（空气）→ 本地 {@code displayGuiScreen} 打开 GUI，无服务端容器/开窗往返。
+     */
+    @Override
+    public void openQuantumTerminalGui(EntityPlayer player) {
+        Minecraft mc = Minecraft.getMinecraft();
+        if (mc.objectMouseOver != null && mc.objectMouseOver.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+            // 准星选中方块 → 方块手势，不开 GUI；提示避免"没反应"的困惑
+            long tick = mc.theWorld.getTotalWorldTime();
+            Long last = lastAimBlockedHintTick.get(player.getUniqueID());
+            if (last == null || tick - last >= AIM_BLOCKED_HINT_COOLDOWN_TICKS) {
+                lastAimBlockedHintTick.put(player.getUniqueID(), tick);
+                player.addChatMessage(
+                    new ChatComponentText(StatCollector.translateToLocal("gtswn.chat.quantum.aim_blocked")));
+            }
+            return;
+        }
+        mc.displayGuiScreen(new GuiQuantumTerminal());
     }
 }

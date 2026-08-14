@@ -30,12 +30,6 @@ public final class QuantumTerminalRequestQueue {
     /** 同一玩家同时只保留一个待处理请求，避免客户端轮询在服务器卡顿时形成请求洪峰。 */
     private static final ConcurrentHashMap<EntityPlayerMP, Boolean> PENDING_PLAYERS = new ConcurrentHashMap<>();
 
-    /** 待处理关闭队列（2.8.4 分支修复）：客户端 GUI 关闭 → 主线程同步关闭服务端 0 槽容器 */
-    private static final ConcurrentLinkedQueue<EntityPlayerMP> CLOSE_PENDING = new ConcurrentLinkedQueue<>();
-
-    /** 同一玩家的关闭请求去重（避免重复 drain 时重复 closeContainer） */
-    private static final ConcurrentHashMap<EntityPlayerMP, Boolean> CLOSE_PLAYERS = new ConcurrentHashMap<>();
-
     private QuantumTerminalRequestQueue() {}
 
     /** Netty 线程入队（仅缓存玩家引用，主线程 drain 时再校验在线/手持） */
@@ -47,35 +41,9 @@ public final class QuantumTerminalRequestQueue {
         }
     }
 
-    /**
-     * Netty 线程入队关闭请求（2.8.4 分支修复）：
-     * 客户端量子终端 GUI 关闭时通知服务端同步关闭 0 槽容器，
-     * 防止窗口 ID 残留导致后续点击窗口包命中空 inventorySlots 越界踢人。
-     */
-    public static void enqueueClose(EntityPlayerMP player) {
-        if (player != null && CLOSE_PLAYERS.putIfAbsent(player, Boolean.TRUE) == null) {
-            CLOSE_PENDING.add(player);
-        }
-    }
-
     /** 主线程逐条处理；本 tick 内排空当前快照 */
     public static void drain() {
         EntityPlayerMP player;
-        // 关闭请求优先处理（避免同一 tick 内先装配数据再关闭造成竞态）
-        while ((player = CLOSE_PENDING.poll()) != null) {
-            CLOSE_PLAYERS.remove(player);
-            try {
-                if (player.playerNetServerHandler != null) {
-                    // 必须用 closeScreen() 而非 closeContainer()：前者会向客户端发送
-                    // S2EPacketCloseWindow，客户端据此重置 openContainer.windowId。
-                    // 否则客户端窗口 ID 停留在终端 GUI 的窗口 ID，后续背包槽位更新包
-                    // （S2FPacketSetSlot，windowId=0）被客户端比对过滤，排序结果不可见。
-                    player.closeScreen();
-                }
-            } catch (Throwable ignored) {
-                // 玩家掉线等：静默丢弃
-            }
-        }
         while ((player = PENDING.poll()) != null) {
             PENDING_PLAYERS.remove(player);
             process(player);

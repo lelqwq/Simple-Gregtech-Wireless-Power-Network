@@ -10,7 +10,6 @@ import net.minecraft.util.StatCollector;
 import com.miaokatze.gtswn.common.items.ItemNetworkQuantumTerminal;
 import com.miaokatze.gtswn.common.quantum.QuantumNetworkData;
 import com.miaokatze.gtswn.network.GTSWNPacketHandler;
-import com.miaokatze.gtswn.network.PacketCloseQuantumTerminal;
 import com.miaokatze.gtswn.network.PacketRequestQuantumTerminalData;
 
 /**
@@ -101,28 +100,33 @@ public class GuiQuantumTerminal extends GuiScreen {
     @Override
     public void updateScreen() {
         super.updateScreen();
+        // 2.8.4 分支（0.5.0）：无服务端容器，本地校验手持——不再是终端则本地关闭
+        // （等价于原 Container.canInteractWith 语义，防止"GUI 开着但终端已不在手"的悬空状态）
+        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
+        if (player == null || !isHoldingTerminal(player)) {
+            Minecraft.getMinecraft()
+                .displayGuiScreen(null);
+            return;
+        }
         // 每 10 tick 轮询一次服务端数据；pollTimer 初值 0 → 打开后立即发首包
         if (this.pollTimer++ % POLL_INTERVAL_TICKS == 0) {
             GTSWNPacketHandler.NETWORK.sendToServer(new PacketRequestQuantumTerminalData());
         }
     }
 
+    /**
+     * 玩家当前手持是否为 ME 网络量子终端（2.8.4 分支 0.5.0，本地校验）。
+     */
+    private static boolean isHoldingTerminal(EntityPlayer player) {
+        net.minecraft.item.ItemStack held = player.getHeldItem();
+        return held != null && held.getItem() instanceof ItemNetworkQuantumTerminal;
+    }
+
     @Override
     public void onGuiClosed() {
         super.onGuiClosed();
         // v1.6.5：关闭不再清缓存（保留最近快照供下次打开即显；改绑其他控制器时由构造函数锚点匹配清空）
-        // 2.8.4 分支修复：通知服务端同步关闭 0 槽容器，防止窗口 ID 残留导致
-        // 后续点击窗口包（如背包整理）命中空 inventorySlots 越界被踢
-        GTSWNPacketHandler.NETWORK.sendToServer(new PacketCloseQuantumTerminal());
-        // 2.8.4 分支修复（0.4.2）：立即修复客户端窗口 ID 污染。
-        // 打开终端 GUI 时 S2DPacketOpenWindow 会把窗口 ID 写到客户端 openContainer（其对象
-        // 仍是背包容器），关闭后若不重置，后续背包槽位更新包（windowId=0）会被客户端比对
-        // 过滤，出现「服务端已排序、界面不刷新」的现象。服务端 closeScreen 的关闭包到达
-        // 前先本地归零，双保险。
-        EntityPlayer player = Minecraft.getMinecraft().thePlayer;
-        if (player != null && player.openContainer != null) {
-            player.openContainer.windowId = 0;
-        }
+        // 2.8.4 分支（0.5.0）：本地打开本地关闭，无服务端容器/窗口 ID，无需任何关闭同步
     }
 
     @Override
@@ -138,7 +142,7 @@ public class GuiQuantumTerminal extends GuiScreen {
         if (data == null) {
             // 首个回包未到达：显示等待占位
             this.fontRendererObj
-                .drawString(EnumChatFormatting.GRAY + "...", this.guiLeft + 13, this.guiTop + 20, 0x404040);
+                .drawString(EnumChatFormatting.GRAY + "...", this.guiLeft + 8, this.guiTop + 20, 0x404040);
         } else if (!data.online) {
             drawOffline(data);
         } else {
@@ -178,25 +182,25 @@ public class GuiQuantumTerminal extends GuiScreen {
         // 控制器坐标行
         this.fontRendererObj.drawString(
             tr("gtswn.gui.quantum.controller_pos") + ": " + data.anchorX + ", " + data.anchorY + ", " + data.anchorZ,
-            this.guiLeft + 13,
+            this.guiLeft + 8,
             this.guiTop + 20,
             0x404040);
         // 维度行
         this.fontRendererObj.drawString(
             tr("gtswn.gui.quantum.dimension") + ": " + data.anchorDim,
-            this.guiLeft + 13,
+            this.guiLeft + 8,
             this.guiTop + 32,
             0x404040);
         // 量子节点数行（v1.6.9 新增字段）
         this.fontRendererObj.drawString(
             tr("gtswn.gui.quantum.node_count") + ": " + data.quantumNodeCount,
-            this.guiLeft + 13,
+            this.guiLeft + 8,
             this.guiTop + 44,
             0x404040);
         // 频道行（保留 v1.6.8 三件套 used/total/(pct%)，过载态红色高亮）
         if (data.channelsInfinite) {
             String channelLine = tr("gtswn.gui.quantum.channels") + ": " + data.usedChannels + " / \u221e";
-            this.fontRendererObj.drawString(channelLine, this.guiLeft + 13, this.guiTop + 56, 0x404040);
+            this.fontRendererObj.drawString(channelLine, this.guiLeft + 8, this.guiTop + 56, 0x404040);
             return;
         }
         int channelPct = data.totalChannels > 0 ? (int) (data.usedChannels * 100L / data.totalChannels) : 0;
@@ -208,7 +212,7 @@ public class GuiQuantumTerminal extends GuiScreen {
             + " ("
             + channelPct
             + "%)";
-        this.fontRendererObj.drawString(channelLine, this.guiLeft + 13, this.guiTop + 56, channelColor);
+        this.fontRendererObj.drawString(channelLine, this.guiLeft + 8, this.guiTop + 56, channelColor);
     }
 
     /**
@@ -221,28 +225,28 @@ public class GuiQuantumTerminal extends GuiScreen {
         // 控制器坐标行（离线快照仍有锚点信息）
         this.fontRendererObj.drawString(
             tr("gtswn.gui.quantum.controller_pos") + ": " + data.anchorX + ", " + data.anchorY + ", " + data.anchorZ,
-            this.guiLeft + 13,
+            this.guiLeft + 8,
             this.guiTop + 20,
             0x404040);
         // 维度行
         this.fontRendererObj.drawString(
             tr("gtswn.gui.quantum.dimension") + ": " + data.anchorDim,
-            this.guiLeft + 13,
+            this.guiLeft + 8,
             this.guiTop + 32,
             0x404040);
         // 量子节点数行（离线时硬编码 0）
         this.fontRendererObj
-            .drawString(tr("gtswn.gui.quantum.node_count") + ": 0", this.guiLeft + 13, this.guiTop + 44, 0x404040);
+            .drawString(tr("gtswn.gui.quantum.node_count") + ": 0", this.guiLeft + 8, this.guiTop + 44, 0x404040);
         // 频道行（离线时硬编码 "0 / 0 (0%)"）
         this.fontRendererObj.drawString(
             tr("gtswn.gui.quantum.channels") + ": 0 / 0 (0%)",
-            this.guiLeft + 13,
+            this.guiLeft + 8,
             this.guiTop + 56,
             0x404040);
         // 离线提示
         this.fontRendererObj.drawString(
             EnumChatFormatting.RED + tr("gtswn.gui.quantum.offline"),
-            this.guiLeft + 13,
+            this.guiLeft + 8,
             this.guiTop + 72,
             0x404040);
     }

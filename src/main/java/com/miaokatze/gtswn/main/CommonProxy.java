@@ -306,4 +306,15 @@ public class CommonProxy {
     public Object getClientGuiElement(int id, EntityPlayer player, World world, int x, int y, int z) {
         return null;
     }
+
+    /**
+     * 打开量子终端 GUI（客户端专用逻辑，2.8.4 分支 0.5.0）。
+     * <p>
+     * 服务端空实现：手持物品 GUI 无服务端容器（已移除 0 槽 Container 与 openGui 协议），
+     * GUI 由客户端本地打开，数据仍走包 5/6 轮询。经 @SidedProxy 转发，
+     * 物品类不引用任何客户端类（v1.5.14 类加载安全模式）。
+     */
+    public void openQuantumTerminalGui(EntityPlayer player) {
+        // 服务端空实现：GUI 只存在于客户端
+    }
 }

@@ -32,8 +32,7 @@ public class GTSimpleWirelessNetwork {
     // 模组唯一标识符 (Mod ID)
     public static final String MODID = "gtswn";
     public static final int GUI_NETWORK_INFO_PANEL = 1;
-    /** ME 网络量子终端 GUI ID（规划 §4；GUI handler 的 case 在 T6 实现） */
-    public static final int GUI_QUANTUM_TERMINAL = 2;
+    // 2.8.4 分支（0.5.0）：量子终端 GUI 客户端本地打开，GUI_QUANTUM_TERMINAL 常量已随容器移除
 
     @Mod.Instance(MODID)
     public static GTSimpleWirelessNetwork instance;
